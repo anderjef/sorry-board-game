@@ -1,20 +1,19 @@
-# Jeffrey Andersen
-# This program was developed starting July 08, 2021, as the Sorry! boardgame in a console-app format.
-# future consideration: collect stats on players
-# future consideration: animate pawn movements on the board
-# future consideration: allow multiple players to view the board at the same time via different screens (considering that in physical play players can ponder what to do on their turn by examining the board before their next turn arrives)
-# future consideration: confirm deck composition is as it should be
-# future consideration: change how the end of slides are labeled as the '0's can be hard to read through
-# future consideration: as a player is playing a 7, give them the ability to undo how they have divvied up the movements (as opposed to cancelling the operation and starting from scratch)
-# future consideration: better display for getting a number in a range from a user such that if there is only one numerical option, the user understands this and that inputting the sole number shown indicates using that number as the input value
-# future consideration: if there is a default play on a turn, don't allow the player to try to pick a different valid play for the given card (unless the default play is not the only play)
-# future consideration: some "invalid play" message when the user attempts an invalid play
-# future consideration: playing until a number of points is achieved (5 points per opponent pawn not home, 25 points if opponents have at most two pawns home, 50 points if opponents have at most one pawn home, and 100 points if no opponent has any pawns home) where the winner goes first in subsequent rounds
-# future consideration: use slide locations in Location enum to dynamically determine and mark the slide paths on the game board
-# future consideration: scoring a play takes into consideration how other players are constrained by their cards in hand (for example, discarding is only allowed if a player had no valid plays (except possibly an '11' as a swap))
-# future consideration: function annotations for the practice, improved readability, and reduced comment length
-# future consideration: docstrings (https://www.python.org/dev/peps/pep-0257/) for the practice, improved readability, and reduced comment length
-# future consideration: prompt user for confirmation of their play if their selected play has a score significantly lower than their possible play of highest score
+
+# TODO: collect stats on players
+# TODO: animate pawn movements on the board
+# TODO: allow multiple players to view the board at the same time via different screens (considering that in physical play players can ponder what to do on their turn by examining the board before their next turn arrives)
+# TODO: confirm deck composition is as it should be
+# TODO: change how the end of slides are labeled as the '0's can be hard to read through
+# TODO: as a player plays a 7, give them the ability to undo how they have divvied up the movements (as opposed to cancelling the operation and starting from scratch)
+# TODO: better display for getting a number in a range from a user such that if there is only one numerical option, the user understands this and that inputting the sole number shown indicates using that number as the input value
+# TODO: if there is a default play on a turn, don't allow the player to try to pick a different valid play for the given card (unless the default play is not the only play)
+# TODO: some "invalid play" message when the user attempts an invalid play
+# TODO: playing until a number of points is achieved (5 points per opponent pawn not home, 25 points if opponents have at most two pawns home, 50 points if opponents have at most one pawn home, and 100 points if no opponent has any pawns home) where the winner goes first in subsequent rounds
+# TODO: use slide locations in Location enum to dynamically determine and mark the slide paths on the game board
+# TODO: scoring a play takes into consideration how other players are constrained by their cards in hand (for example, discarding is only allowed if a player had no valid plays (except possibly an '11' as a swap))
+# TODO: function annotations
+# TODO: docstrings (https://www.python.org/dev/peps/pep-0257/)
+# TODO: prompt user for confirmation of their play if their selected play has a score significantly lower than their possible play of highest score
 
 
 import copy
@@ -29,9 +28,6 @@ class Color(Enum):  # maps color names to strings that, when printed, turn the s
     GREEN = '\033[0;32m'
     YELLOW = '\033[0;33m'
     BLUE = '\033[0;34m'
-    # PURPLE = '\033[0;35m'  # unused/unnecessary
-    # CYAN = '\033[0;36m'  # unused/unnecessary
-    # WHITE = '\033[0;37m'  # unused/unnecessary
     RESET = '\033[0;0m'
 
 
@@ -89,7 +85,7 @@ def get_text_color(letter):
 class Player:
     def __init__(self, player_color, player_type, max_hand_size):
         self.name = player_color.name.lower().capitalize()
-        self.player_type = player_type  # PlayerType.COMPUTER for computer-controlled or PlayerType.HUMAN for human-controlled
+        self.player_type = player_type
         self.pawns = dict.fromkeys((self.name[0] + str(i) for i in range(1, 5)), SpecialLocation.START.value)  # pawn label and pawn x and y coordinates (zero indexed, on the game board (see where the game board is printed) cells (not individual characters), and where down and right are positive) or SpecialLocation.START.value for start or SpecialLocation.HOME.value for home of each of the player's four pawns
         self.cards_in_hand = []
         self.card_select_method = None if max_hand_size != 0 and self.player_type != PlayerType.COMPUTER else CardSelectMethod.BY_VALUE  # if there are no hands of cards or if this is a computer-controlled player, cards are selected by value
@@ -98,14 +94,14 @@ class Player:
                 self.card_select_method = input(f"{get_text_color(self.name[0])}{self.name}{Color.RESET.value}, do you want to select cards to play from your hand by their 1-{max_hand_size} index ({CardSelectMethod.BY_INDEX.value}) or by their value ({CardSelectMethod.BY_VALUE.value})? ")
             if self.card_select_method == CardSelectMethod.BY_INDEX.value:
                 self.card_select_method = CardSelectMethod.BY_INDEX
-            elif self.card_select_method == CardSelectMethod.BY_VALUE.value:  # this last condition check is actually redundant
+            elif self.card_select_method == CardSelectMethod.BY_VALUE.value:  # check is redundant
                 self.card_select_method = CardSelectMethod.BY_VALUE
 
 
 def clear_console():
-    if name == 'nt':  # on a Windows machine
+    if name == 'nt':  # Windows
         system('cls')
-    else:  # on a Mac or Linux machine where name == 'posix'
+    else:  # Mac or Linux (name == 'posix')
         system('clear')
 
 
@@ -210,7 +206,7 @@ def format_board_line(board_line, line_y_pos, all_pawns, is_which_pawns_placed):
                     board_line_with_slides_colored += Color.RESET.value
                 board_line_with_slides_colored += board_line[board_line_index]
             board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and board_line[min(board_line.find('|\033[0;3', 1) if board_line.find('|\033[0;3', 1) != -1 else len(board_line), board_line.find('+', 1) if board_line.find('+', 1) != -1 else len(board_line))] != character_being_colored else '') + board_line[min(board_line.find('|\033[0;3', 1) if board_line.find('|\033[0;3', 1) != -1 else len(board_line), board_line.find('+', 1) if board_line.find('+', 1) != -1 else len(board_line)):max(board_line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, board_line.rfind('+', 0, -1) + len('+') - 1) + 1]
-            character_being_colored = None  # reset
+            character_being_colored = None
             for board_line_index in range(max(board_line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, board_line.rfind('+', 0, -1) + len('+') - 1) + 1 - len(board_line), -1):
                 if character_being_colored is None and board_line[board_line_index] in ['^', 'V', '|', '0']:
                     character_being_colored = board_line[board_line_index]
@@ -400,7 +396,7 @@ def move_pawn(num_spaces, label_of_pawn_to_move, all_pawns, name_of_player_makin
                 all_pawns[label_of_pawn_to_move] = Location.RED_START_EXIT.value.copy()
             elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
                 all_pawns[label_of_pawn_to_move] = Location.YELLOW_START_EXIT.value.copy()
-            elif label_of_pawn_to_move[0] == Color.BLUE.name[0]:  # this last condition check is actually redundant
+            elif label_of_pawn_to_move[0] == Color.BLUE.name[0]:  # check is redundant
                 all_pawns[label_of_pawn_to_move] = Location.BLUE_START_EXIT.value.copy()
             break  # no further movement is allowed if the pawn is moved from its start location
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if in a safe zone
@@ -410,7 +406,7 @@ def move_pawn(num_spaces, label_of_pawn_to_move, all_pawns, name_of_player_makin
                 all_pawns[label_of_pawn_to_move][Coordinate.X] += (-1 if is_movement_forward else 1)
             elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
                 all_pawns[label_of_pawn_to_move][Coordinate.X] += (1 if is_movement_forward else -1)
-            elif label_of_pawn_to_move[0] == Color.BLUE.name[0]:  # this last condition check is actually redundant
+            elif label_of_pawn_to_move[0] == Color.BLUE.name[0]:  # check is redundant
                 all_pawns[label_of_pawn_to_move][Coordinate.Y] += (-1 if is_movement_forward else 1)
             if all_pawns[label_of_pawn_to_move] in Location.HOME_COORDINATES.value:  # if at a SpecialLocation.HOME.value location
                 all_pawns[label_of_pawn_to_move] = SpecialLocation.HOME.value
@@ -436,7 +432,7 @@ def move_pawn(num_spaces, label_of_pawn_to_move, all_pawns, name_of_player_makin
             all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += (1 if is_movement_forward else -1)
         elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 0, Coordinate.Y: 15}:  # if pawn is in the bottom left square
             all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += (-1 if is_movement_forward else 1)
-        elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 15, Coordinate.Y: 15}:  # if pawn is in the bottom right square; this last condition check is actually redundant
+        elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 15, Coordinate.Y: 15}:  # if pawn is in the bottom right square; check is redundant
             all_pawns[label_of_pawn_to_move][(Coordinate.X if is_movement_forward else Coordinate.Y)] -= 1
         num_spaces += (-1 if is_movement_forward else 1)
     if all_pawns[label_of_pawn_to_move] not in [SpecialLocation.START.value, SpecialLocation.HOME.value] and ((label_of_pawn_to_move[0] == Color.BLUE.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.Y] != Coordinate.MAX_Y.value) or (label_of_pawn_to_move[0] == Color.GREEN.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.Y] != Coordinate.MIN_Y.value) or (label_of_pawn_to_move[0] == Color.RED.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.X] != Coordinate.MAX_X.value) or (label_of_pawn_to_move[0] == Color.YELLOW.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.X] != Coordinate.MIN_X.value)):  # if not on line corresponding to pawn's color
@@ -599,8 +595,8 @@ def enumerate_possible_plays(hand_of_cards, name_of_player_to_play, all_pawns, a
                     pawn_indices[0] += 1
                     for i in range(len(pawn_indices) - 1):
                         if pawn_indices[i] == len(movable_pawns):
-                            pawn_indices[i] = 0  # reset index/counter
-                            pawn_indices[i + 1] += 1  # increment next index/counter over
+                            pawn_indices[i] = 0
+                            pawn_indices[i + 1] += 1
             else:
                 movable_pawns = []
                 for pawn_label in all_pawns:
@@ -742,7 +738,7 @@ def determine_default_action(card_value, other_chosen_pawn_targets, all_possible
             explanation_string += f" {'for' if not is_card_a_ten_as_backward_one else 'back'}ward by {int(card_value) if not is_card_a_ten_as_backward_one else 1}"
     elif card_value == '11':
         explanation_string = f"swapping the locations of pawns {default_action[0] if len(default_action) == 2 else other_chosen_pawn_targets[0]} and {default_action[len(default_action) - 1]}"
-    elif card_value == 'Sorry':  # this last condition check is actually redundant
+    elif card_value == 'Sorry':  # check is redundant
         pawn_in_start = None  # the label of the pawn determined to be at its start location (according the play to be valid)
         pawn_to_move_to_start = None  # the label of the pawn determined to not be at its start location (knowing the play to be valid)
         if other_chosen_pawn_targets:
@@ -755,7 +751,7 @@ def determine_default_action(card_value, other_chosen_pawn_targets, all_possible
             elif other_chosen_pawn_targets[0][0] == get_teammate_letter(name_of_player_making_play[0]):
                 pawn_in_start = other_chosen_pawn_targets[0]
                 pawn_to_move_to_start = default_action[0]
-            elif default_action[0] == get_teammate_letter(name_of_player_making_play[0]):  # this last condition check is actually redundant
+            elif default_action[0] == get_teammate_letter(name_of_player_making_play[0]):  # check is redundant
                 pawn_in_start = default_action[0]
                 pawn_to_move_to_start = other_chosen_pawn_targets[0]
         else:
@@ -877,7 +873,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                 player.pawns[player.name[0] + '1'] = Location.GREEN_START_EXIT.value.copy()
             elif player.name[0] == Color.RED.name[0]:
                 player.pawns[player.name[0] + '1'] = Location.RED_START_EXIT.value.copy()
-            elif player.name[0] == Color.YELLOW.name[0]:  # this last condition check is actually redundant
+            elif player.name[0] == Color.YELLOW.name[0]:  # check is redundant
                 player.pawns[player.name[0] + '1'] = Location.YELLOW_START_EXIT.value.copy()
     do_show_card_descriptions = get_user_confirmation(f"Turn on card descriptions during play (recommended with novice players)?")
     print()
@@ -938,7 +934,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
         while not is_valid_play:
             is_valid_play = True  # to be corrected as necessary
             if hand_size != 0:
-                card_to_play = None  # reset
+                card_to_play = None
             if player_to_play.player_type == PlayerType.HUMAN:
                 do_no_movement_for_2 = False
                 while card_to_play not in player_to_play.cards_in_hand:
@@ -968,7 +964,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                                 else:
                                     break
                         if not selected_card_has_some_valid_play:
-                            print(f"Sorry, but you cannot play your {card_to_play} right now because no valid plays with it exist, though some valid play(s) exist for some other card(s) in your hand.")  # future consideration: list the card(s) in hand having valid play(s)
+                            print(f"Sorry, but you cannot play your {card_to_play} right now because no valid plays with it exist, though some valid play(s) exist for some other card(s) in your hand.")  # TODO: list the card(s) in hand having valid play(s)
                             card_to_play = None
                         elif card_to_play == '2' and is_no_valid_movement_for_2:
                             if get_user_confirmation("No pawn can be moved with this 2. Play this 2 only to draw a card?"):
@@ -978,11 +974,11 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
 
                 num_times_eleven_prompted_validly = 0  # an 11 is the only card that might have a valid move with both one and multiple (two) pawn targets, or might have an invalid first pawn target (since it would be assumed that one target is for a forward pawn movement but two targets are for a swap, unless the user is to be prompted an extra time) so its pawn targeting begets the extra loop condition
                 seven_remaining_distance = 7  # only utilized when card_to_play == '7'
-                pawn_targets = []  # reset
+                pawn_targets = []
                 if not do_no_movement_for_2:
                     pawn_target = None
                     while 'c' not in pawn_targets and (not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one) or (num_times_eleven_prompted_validly == 1 and pawn_target)):  # have the user pick as many pawn targets as it takes to complete a valid move
-                        pawn_target = None  # reset
+                        pawn_target = None
                         if pawn_targets and card_to_play not in ['7', '10', '11', 'Sorry'] and not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one):  # if an invalid pawn_target was already provided for a card that requires exactly one pawn target and has no mistaking for what the move is intended to be (otherwise no possible moves with the last chosen pawn target has the last chosen pawn target removed separately), throw out the old/invalid pawn target
                             pawn_targets.pop()
                         is_some_possible_play = enumerate_possible_plays(player_to_play.cards_in_hand, player_to_play.name, all_pawns, are_teams, True, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played)
@@ -1051,7 +1047,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                     num_played_2s += 1
                     if not do_no_movement_for_2:
                         play_card(card_to_play, pawn_targets, all_pawns)
-                        pawn_targets = []  # reset
+                        pawn_targets = []
                         for pawn in all_pawns:  # need to update the players' copies of the pawns with any adjustments
                             for player in players:
                                 if player.name[0] == pawn[0]:
@@ -1161,4 +1157,4 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
     return 0
 
 
-sorry_boardgame()  # execute
+sorry_boardgame()
