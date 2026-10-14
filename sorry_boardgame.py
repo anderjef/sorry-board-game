@@ -19,7 +19,8 @@
 import copy
 import random
 from enum import Enum
-from os import system, name
+from subprocess import run
+from os import name
 
 
 class Color(Enum):  # maps color names to strings that, when printed, turn the subsequent text to that color
@@ -100,9 +101,9 @@ class Player:
 
 def clear_console():
     if name == 'nt':  # Windows
-        system('cls')
+        run('cls', shell=True)
     else:  # Mac or Linux (name == 'posix')
-        system('clear')
+        run('clear', shell=True)
 
 
 def format_board_line(board_line, line_y_pos, all_pawns, is_which_pawns_placed):  # takes a board line string, the y value of the board line, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
