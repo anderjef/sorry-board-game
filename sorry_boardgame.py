@@ -24,7 +24,6 @@ from os import name
 
 
 class Color(Enum):  # maps color names to strings that, when printed, turn the subsequent text to that color
-    # BLACK = '\033[0;30m'  # unused/unnecessary
     RED = '\033[0;31m'
     GREEN = '\033[0;32m'
     YELLOW = '\033[0;33m'
