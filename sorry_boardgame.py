@@ -1157,4 +1157,6 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
     return 0
 
 
-sorry_boardgame()
+if __name__ == "__main__":
+    raise SystemExit(sorry_boardgame())
+
