@@ -799,7 +799,7 @@ def play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_o
 def get_player_type(player_name, default_enum):  # takes the player's name (as a string) and an enum mapping the word to show to indicate the default option to the value to assign if the default option is chosen; returns the selected PlayerType
     player_type = None
     while player_type is None or (player_type and player_type not in [PlayerType.COMPUTER.value, PlayerType.HUMAN.value, PlayerType.NONEXISTENT.value]):
-        player_type = input(f"Is {get_text_color(player_name[0].upper())}{player_name}{Color.RESET.value} a computer ({PlayerType.COMPUTER.value}) or human ({PlayerType.HUMAN.value}) player or nonexistent ({PlayerType.NONEXISTENT.value})? (default is {default_enum.name.lower()}) ")
+        player_type = input(f"Is {get_text_color(player_name[0].upper())}{player_name}{Color.RESET.value} a computer ({PlayerType.COMPUTER.value}) or human ({PlayerType.HUMAN.value}) player or nonexistent ({PlayerType.NONEXISTENT.value})? [default: {default_enum.name.lower()}] ")
     if player_type == PlayerType.COMPUTER.value:
         player_type = PlayerType.COMPUTER
     elif player_type == PlayerType.HUMAN.value:
@@ -847,7 +847,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
     draw_pile = ['1'] * 5 + ['2'] * 4 + ['3'] * 4 + ['4'] * 4 + ['5'] * 4 + ['7'] * 4 + ['8'] * 4 + ['10'] * 4 + ['11'] * 4 + ['12'] * 4 + ['Sorry'] * 4  # distribution collected from an owned version of the game
     hand_size = None
     while hand_size is None or not isinstance(hand_size, int) or hand_size < 0 or hand_size > len(draw_pile) / num_players:  # must have enough cards in the deck to deal
-        hand_size = input("Hand size (default is 5): ")
+        hand_size = input("Hand size: [default: 5] ")
         try:
             hand_size = int(hand_size)
         except ValueError:
