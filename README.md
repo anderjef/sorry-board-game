@@ -5,9 +5,9 @@ Start date: 2021-07-08
 
 ## Demo
 
-![Initial board state for a 4-player game](Picture1.png)
+![Initial board state for a 4-player game](initial-board-state-for-a-4-player-game.png)
 
-![Sample setup steps](Picture2.png)
+![Sample setup steps](sample-setup-steps.png)
 
 ## Dependencies
 
