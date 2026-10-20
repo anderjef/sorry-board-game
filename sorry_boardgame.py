@@ -1,4 +1,5 @@
 
+# TODO: configurable number of pins per player
 # TODO: collect stats on players
 # TODO: animate pawn movements on the board
 # TODO: allow multiple players to view the board at the same time via different screens (considering that in physical play players can ponder what to do on their turn by examining the board before their next turn arrives)
@@ -23,12 +24,12 @@ from subprocess import run
 from os import name
 
 
-class Color(Enum):  # maps color names to strings that, when printed, turn the subsequent text to that color
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[0;33m'
+class Color(Enum):  # maps color names to strings that, when printed, turn subsequent text that color
     BLUE = '\033[0;34m'
+    GREEN = '\033[0;32m'
+    RED = '\033[0;31m'
     RESET = '\033[0;0m'
+    YELLOW = '\033[0;33m'
 
 
 class PlayerType(Enum):
@@ -38,31 +39,31 @@ class PlayerType(Enum):
 
 
 class Coordinate(Enum):
-    X = 'x'
-    Y = 'y'
-    MIN_X = 0
-    MIN_Y = 0
     MAX_X = 15
     MAX_Y = 15
+    MIN_X = 0
+    MIN_Y = 0
+    X = 'x'
+    Y = 'y'
 
 
 class Location(Enum):
+    BLUE_START_EXIT = {Coordinate.X: 11, Coordinate.Y: 15}
     GREEN_START_EXIT = {Coordinate.X: 4, Coordinate.Y: 0}
     RED_START_EXIT = {Coordinate.X: 15, Coordinate.Y: 4}
-    BLUE_START_EXIT = {Coordinate.X: 11, Coordinate.Y: 15}
     YELLOW_START_EXIT = {Coordinate.X: 0, Coordinate.Y: 11}
     HOME_COORDINATES = [{Coordinate.X: 2, Coordinate.Y: 6}, {Coordinate.X: 9, Coordinate.Y: 2}, {Coordinate.X: 13, Coordinate.Y: 9}, {Coordinate.X: 6, Coordinate.Y: 13}]
+    BLUE_SAFETY_ZONE_ENTRANCE = {Coordinate.X: 13, Coordinate.Y: 15}
     GREEN_SAFETY_ZONE_ENTRANCE = {Coordinate.X: 2, Coordinate.Y: 0}
     RED_SAFETY_ZONE_ENTRANCE = {Coordinate.X: 15, Coordinate.Y: 2}
-    BLUE_SAFETY_ZONE_ENTRANCE = {Coordinate.X: 13, Coordinate.Y: 15}
     YELLOW_SAFETY_ZONE_ENTRANCE = {Coordinate.X: 0, Coordinate.Y: 13}
     SLIDE_ENTRANCES = [{Coordinate.X: 1, Coordinate.Y: 0}, {Coordinate.X: 9, Coordinate.Y: 0}, {Coordinate.X: 15, Coordinate.Y: 1}, {Coordinate.X: 15, Coordinate.Y: 9}, {Coordinate.X: 14, Coordinate.Y: 15}, {Coordinate.X: 6, Coordinate.Y: 15}, {Coordinate.X: 0, Coordinate.Y: 14}, {Coordinate.X: 0, Coordinate.Y: 6}]
     # SLIDE_EXITS = [{Coordinate.X: 4, Coordinate.Y: 0}, {Coordinate.X: 13, Coordinate.Y: 0}, {Coordinate.X: 15, Coordinate.Y: 4}, {Coordinate.X: 15, Coordinate.Y: 13}, {Coordinate.X: 11, Coordinate.Y: 15}, {Coordinate.X: 2, Coordinate.Y: 15}, {Coordinate.X: 0, Coordinate.Y: 11}, {Coordinate.X: 0, Coordinate.Y: 2}]  # deprecated for not being utilized
 
 
 class SpecialLocation(Enum):
-    START = 's'
     HOME = 'h'
+    START = 's'
 
 
 class CardSelectMethod(Enum):
@@ -84,17 +85,20 @@ def get_text_color(letter):
 
 class Player:
     def __init__(self, player_color, player_type, max_hand_size):
-        self.name = player_color.name.lower().capitalize()
-        self.player_type = player_type
-        self.pawns = dict.fromkeys((self.name[0] + str(i) for i in range(1, 5)), SpecialLocation.START.value)  # pawn label and pawn x and y coordinates (zero indexed, on the game board (see where the game board is printed) cells (not individual characters), and where down and right are positive) or SpecialLocation.START.value for start or SpecialLocation.HOME.value for home of each of the player's four pawns
         self.cards_in_hand = []
-        self.card_select_method = None if max_hand_size != 0 and self.player_type != PlayerType.COMPUTER else CardSelectMethod.BY_VALUE  # if there are no hands of cards or if this is a computer-controlled player, cards are selected by value
-        if self.player_type == PlayerType.HUMAN:
+        self.color = player_color
+        self.name = self.color.name.lower().capitalize()
+        self.pawns = dict.fromkeys((self.name[0] + str(i) for i in range(1, 5)), SpecialLocation.START.value)  # pawn label and pawn x and y coordinates (zero indexed, on the game board (see where the game board is printed) cells (not individual characters), and where down and right are positive) or SpecialLocation.START.value for start or SpecialLocation.HOME.value for home of each of the player's four pawns
+        self.player_type = player_type
+        if self.player_type == PlayerType.COMPUTER:
+            self.card_select_method = CardSelectMethod.BY_VALUE
+        else:  # self.player_type == PlayerType.HUMAN
+            self.card_select_method = None if max_hand_size != 0 else CardSelectMethod.BY_VALUE
             while self.card_select_method not in [CardSelectMethod.BY_INDEX.value, CardSelectMethod.BY_VALUE.value]:
-                self.card_select_method = input(f"{get_text_color(self.name[0])}{self.name}{Color.RESET.value}, do you want to select cards to play from your hand by their 1-{max_hand_size} index ({CardSelectMethod.BY_INDEX.value}) or by their value ({CardSelectMethod.BY_VALUE.value})? ")
+                self.card_select_method = input(f"{self.color.value}{self.name}{Color.RESET.value}, do you want to select cards to play from your hand by their 1-{max_hand_size} index ({CardSelectMethod.BY_INDEX.value}) or by their value ({CardSelectMethod.BY_VALUE.value})? ")
             if self.card_select_method == CardSelectMethod.BY_INDEX.value:
                 self.card_select_method = CardSelectMethod.BY_INDEX
-            elif self.card_select_method == CardSelectMethod.BY_VALUE.value:  # check is redundant
+            else:  # self.card_select_method == CardSelectMethod.BY_VALUE.value
                 self.card_select_method = CardSelectMethod.BY_VALUE
 
 
