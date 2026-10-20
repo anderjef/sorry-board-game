@@ -1,9 +1,7 @@
 
-# TODO: configurable number of pins per player
+# TODO: configurable number of pawns per player
 # TODO: collect stats on players
-# TODO: animate pawn movements on the board
-# TODO: allow multiple players to view the board at the same time via different screens (considering that in physical play players can ponder what to do on their turn by examining the board before their next turn arrives)
-# TODO: confirm deck composition is as it should be
+# TODO: animate pawn movements
 # TODO: change how the end of slides are labeled as the '0's can be hard to read through
 # TODO: as a player plays a 7, give them the ability to undo how they have divvied up the movements (as opposed to cancelling the operation and starting from scratch)
 # TODO: better display for getting a number in a range from a user such that if there is only one numerical option, the user understands this and that inputting the sole number shown indicates using that number as the input value
@@ -71,14 +69,14 @@ class CardSelectMethod(Enum):
     BY_VALUE = 'v'
 
 
-def get_text_color(letter):
-    if letter == Color.BLUE.name[0]:
+def player_id_to_text_color(player_id):
+    if player_id == Color.BLUE.name[0]:
         return Color.BLUE.value
-    elif letter == Color.GREEN.name[0]:
+    elif player_id == Color.GREEN.name[0]:
         return Color.GREEN.value
-    elif letter == Color.RED.name[0]:
+    elif player_id == Color.RED.name[0]:
         return Color.RED.value
-    elif letter == Color.YELLOW.name[0]:
+    elif player_id == Color.YELLOW.name[0]:
         return Color.YELLOW.value
     return Color.RESET.value
 
@@ -88,7 +86,8 @@ class Player:
         self.cards_in_hand = []
         self.color = player_color
         self.name = self.color.name.lower().capitalize()
-        self.pawns = dict.fromkeys((self.name[0] + str(i) for i in range(1, 5)), SpecialLocation.START.value)  # pawn label and pawn x and y coordinates (zero indexed, on the game board (see where the game board is printed) cells (not individual characters), and where down and right are positive) or SpecialLocation.START.value for start or SpecialLocation.HOME.value for home of each of the player's four pawns
+        self.id = self.name[0]
+        self.pawns = dict.fromkeys((self.id + str(i) for i in range(1, 5)), SpecialLocation.START.value)  # pawn label and pawn x and y coordinates (zero indexed, on the game board (see where the game board is printed) cells (not individual characters), and where down and right are positive) or SpecialLocation.START.value for start or SpecialLocation.HOME.value for home of each of the player's four pawns
         self.player_type = player_type
         if self.player_type == PlayerType.COMPUTER:
             self.card_select_method = CardSelectMethod.BY_VALUE
@@ -223,7 +222,7 @@ def format_board_line(board_line, line_y_pos, all_pawns, is_which_pawns_placed):
             board_line = board_line_with_slides_colored
     if board_line[0] == '|':
         for pawn_label in all_pawns:  # color pawns on the border
-            pawn_color = get_text_color(pawn_label[0])
+            pawn_color = player_id_to_text_color(pawn_label[0])
             if line_y_pos in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:
                 board_line = board_line.replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() is provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
             else:
@@ -302,7 +301,7 @@ def print_board(all_pawns):
     # board_line_num += 1  # unused/unnecessary
 
 
-def print_current_gameboard(all_pawns):  # takes as input a dictionary mapping pawn labels to their present location
+def print_current_game_board(all_pawns):  # takes as input a dictionary mapping pawn labels to their present location
     print("State of the game board:")
     print_board(all_pawns)
     print()
@@ -336,14 +335,14 @@ def draw_card(draw_pile, discard_pile, last_discard_pile, num_times_to_show_last
     return draw_pile.pop(), (num_times_to_show_last_discard_pile if discard_pile else num_players - 1)  # num_players - 1 show as not to show the last discard pile to the player that played the last card into it
 
 
-def get_teammate_letter(player_letter):  # returns an empty string on error
-    if player_letter == Color.BLUE.name[0]:
+def get_teammate_letter(player_name):  # returns an empty string on error
+    if player_name[0] == Color.BLUE.name[0]:
         return Color.GREEN.name[0]
-    elif player_letter == Color.GREEN.name[0]:
+    elif player_name[0] == Color.GREEN.name[0]:
         return Color.BLUE.name[0]
-    elif player_letter == Color.RED.name[0]:
+    elif player_name[0] == Color.RED.name[0]:
         return Color.YELLOW.name[0]
-    elif player_letter == Color.YELLOW.name[0]:
+    elif player_name[0] == Color.YELLOW.name[0]:
         return Color.RED.name[0]
     return ''
 
@@ -373,7 +372,7 @@ def binary_search(value_to_find, array_to_search, access_array=None):  # array_t
     current_index = int((max_index - min_index) / 2)
     if access_array is None:
         access_array = []
-    access_array.insert(0, current_index)  # first element must be the current index
+    access_array.insert(0, current_index)  # first element must always be the current index
     element_to_compare = get_element_to_access(array_to_search, access_array)
     while element_to_compare != value_to_find and min_index != max_index:
         if element_to_compare < value_to_find:
@@ -381,7 +380,7 @@ def binary_search(value_to_find, array_to_search, access_array=None):  # array_t
         else:  # element_to_compare > value_to_find
             max_index = current_index
         current_index = int((max_index + min_index) / 2)
-        access_array[0] = current_index  # update the current index in access_array
+        access_array[0] = current_index
         element_to_compare = get_element_to_access(array_to_search, access_array)
     return current_index if min_index != max_index else None
 
@@ -487,7 +486,7 @@ def is_valid_target(pawn_targets, card_value, name_of_player_to_play, all_pawns,
     elif card_value == '7':
         if can_sevens_be_split_across_more_than_two_pawns or len(pawn_targets) <= 2:
             movement_sum = 0
-            seen_pawn_labels = []  # keeps track of which pawn labels have been seen (and hence repeated)
+            seen_pawn_labels = []  # keeps track of which pawn labels have been seen and hence repeated
             all_pawns_copy = copy.deepcopy(all_pawns)
             for pawn_label in pawn_targets:
                 if all_pawns[pawn_label] in [SpecialLocation.START.value, SpecialLocation.HOME.value]:
@@ -528,18 +527,18 @@ def is_some_valid_split_for_seven(pawn_targets, name_of_player_to_play, all_pawn
     return False
 
 
-def is_some_valid_move_for_ten(pawn_targets, name_of_player_to_play, all_pawns, are_teams):  # card value is assumed to be '10'; returns a boolean
+def is_some_valid_move_for_ten(pawn_targets, name_of_player_to_play, all_pawns, are_teams):
     return is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, True) or is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, False)
 
 
-def is_some_valid_swap_for_eleven(existing_pawn_target, name_of_player_to_play, all_pawns, are_teams):  # card value is assumed to be '11'; returns a boolean
+def is_some_valid_swap_for_eleven(existing_pawn_target, name_of_player_to_play, all_pawns, are_teams):
     for pawn_label in all_pawns:
         if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], '11', name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
     return False
 
 
-def is_some_valid_play_for_sorry(existing_pawn_target, name_of_player_to_play, all_pawns, are_teams):  # card value is assumed to be 'Sorry'; returns a boolean
+def is_some_valid_play_for_sorry(existing_pawn_target, name_of_player_to_play, all_pawns, are_teams):
     for pawn_label in all_pawns:
         if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], 'Sorry', name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
@@ -800,57 +799,56 @@ def play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_o
         move_pawn(int(card_to_play), pawn_targets[0], all_pawns)
 
 
-def get_player_type(player_name, default_enum):  # takes the player's name (as a string) and an enum mapping the word to show to indicate the default option to the value to assign if the default option is chosen; returns the selected PlayerType
+def get_player_type(player_color, default_enum):  # takes the player's color and an enum mapping the word to show to indicate the default option to the value to assign if the default option is chosen; returns the selected PlayerType
     player_type = None
     while player_type is None or (player_type and player_type not in [PlayerType.COMPUTER.value, PlayerType.HUMAN.value, PlayerType.NONEXISTENT.value]):
-        player_type = input(f"Is {get_text_color(player_name[0].upper())}{player_name}{Color.RESET.value} a computer ({PlayerType.COMPUTER.value}) or human ({PlayerType.HUMAN.value}) player or nonexistent ({PlayerType.NONEXISTENT.value})? [default: {default_enum.name.lower()}] ")
+        player_type = input(f"Is {player_color.value}{player_color.name.lower()}{Color.RESET.value} a {PlayerType.COMPUTER.name.lower()} ({PlayerType.COMPUTER.value}), {PlayerType.HUMAN.name.lower()} ({PlayerType.HUMAN.value}), or {PlayerType.NONEXISTENT.name.lower()} ({PlayerType.NONEXISTENT.value})? [default: {default_enum.name.lower()}] ")
     if player_type == PlayerType.COMPUTER.value:
-        player_type = PlayerType.COMPUTER
+        return PlayerType.COMPUTER
     elif player_type == PlayerType.HUMAN.value:
-        player_type = PlayerType.HUMAN
+        return PlayerType.HUMAN
     elif player_type == PlayerType.NONEXISTENT.value:
-        player_type = PlayerType.NONEXISTENT
-    return player_type if player_type else default_enum
+        return PlayerType.NONEXISTENT
+    else:
+        return default_enum
 
 
 def get_user_confirmation(message):  # returns True on confirmation and False on denial
-    valid_confirmation_strings = ['y', 'yes']   # the first element of valid_confirmation_strings is shown in the prompt
-    valid_denial_strings = ['n', 'no']   # the first element of valid_confirmation_strings is shown in the prompt
+    valid_confirmation_strings = ['y', 'yes']   # the first element is shown in the prompt
+    valid_denial_strings = ['n', 'no']   # the first element is shown in the prompt
     input_string = None
     while input_string not in valid_confirmation_strings and input_string not in valid_denial_strings:
-        input_string = input(f"{message} ({valid_confirmation_strings[0]}/{valid_denial_strings[0]}) ").strip().lower()
+        input_string = input(f"{message} [{valid_confirmation_strings[0]}/{valid_denial_strings[0]}] ").strip().lower()
     return input_string in valid_confirmation_strings
 
 
-def sorry_boardgame():  # returns zero on success and nonzero (some other integer) on failure
+def sorry_boardgame():  # returns zero on success and some other integer on failure
     clear_console()  # clearing console at the beginning appears to be required for coloring
 
     num_players = 0
-    blue_player_type = get_player_type(Color.BLUE.name.lower(), PlayerType.HUMAN)
+    blue_player_type = get_player_type(Color.BLUE, PlayerType.HUMAN)
     num_players += (blue_player_type != PlayerType.NONEXISTENT)
-    green_player_type = get_player_type(Color.GREEN.name.lower(), PlayerType.COMPUTER)
+    green_player_type = get_player_type(Color.GREEN, PlayerType.COMPUTER)
     num_players += (green_player_type != PlayerType.NONEXISTENT)
-    red_player_type = get_player_type(Color.RED.name.lower(), PlayerType.NONEXISTENT)
+    red_player_type = get_player_type(Color.RED, PlayerType.NONEXISTENT)
     num_players += (red_player_type != PlayerType.NONEXISTENT)
-    yellow_player_type = get_player_type(Color.YELLOW.name.lower(), PlayerType.NONEXISTENT)
+    yellow_player_type = get_player_type(Color.YELLOW, PlayerType.NONEXISTENT)
     num_players += (yellow_player_type != PlayerType.NONEXISTENT)
     print()
+    
+    if num_players == 0:
+        return 0
 
-    are_teams = False   # teaming is only allowed in four-player games
-    can_sevens_be_split_across_more_than_two_pawns = False   # the ability to split sevens among more than two pawns is only allowed in four-player games
-    # if num_players == 0:  # deprecated for being excessively strict an unclear as to whether the the program should exit with or without an error code
-        # return 1  # deprecated for being excessively strict an unclear as to whether the the program should exit with or without an error code
-    if num_players == 1:
-        if not get_user_confirmation("There is only one player. Are you sure you want to continue?"):
-            return 0
-    elif num_players == 4:
+    are_teams = False
+    can_sevens_be_split_across_more_than_two_pawns = False
+    if num_players == 4:
         are_teams = get_user_confirmation("Is play in teams?")
         if are_teams:
             can_sevens_be_split_across_more_than_two_pawns = get_user_confirmation("Can sevens be split across more than two pawns?")
 
-    draw_pile = ['1'] * 5 + ['2'] * 4 + ['3'] * 4 + ['4'] * 4 + ['5'] * 4 + ['7'] * 4 + ['8'] * 4 + ['10'] * 4 + ['11'] * 4 + ['12'] * 4 + ['Sorry'] * 4  # distribution collected from an owned version of the game
+    draw_pile = ['1'] * 5 + ['2'] * 4 + ['3'] * 4 + ['4'] * 4 + ['5'] * 4 + ['7'] * 4 + ['8'] * 4 + ['10'] * 4 + ['11'] * 4 + ['12'] * 4 + ['Sorry'] * 4
     hand_size = None
-    while hand_size is None or not isinstance(hand_size, int) or hand_size < 0 or hand_size > len(draw_pile) / num_players:  # must have enough cards in the deck to deal
+    while hand_size is None or not isinstance(hand_size, int) or hand_size < 0 or hand_size > len(draw_pile) / num_players:
         hand_size = input("Hand size: [default: 5] ")
         try:
             hand_size = int(hand_size)
@@ -871,29 +869,29 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
         players.append(Player(Color.RED, red_player_type, hand_size))
     if get_user_confirmation("Faster play (each player begins the game with one pawn out of start)?"):
         for player in players:
-            if player.name[0] == Color.BLUE.name[0]:
-                player.pawns[player.name[0] + '1'] = Location.BLUE_START_EXIT.value.copy()
-            elif player.name[0] == Color.GREEN.name[0]:
-                player.pawns[player.name[0] + '1'] = Location.GREEN_START_EXIT.value.copy()
-            elif player.name[0] == Color.RED.name[0]:
-                player.pawns[player.name[0] + '1'] = Location.RED_START_EXIT.value.copy()
-            elif player.name[0] == Color.YELLOW.name[0]:  # check is redundant
-                player.pawns[player.name[0] + '1'] = Location.YELLOW_START_EXIT.value.copy()
-    do_show_card_descriptions = get_user_confirmation(f"Turn on card descriptions during play (recommended with novice players)?")
+            if player.color == Color.BLUE:
+                player.pawns[player.id + '1'] = Location.BLUE_START_EXIT.value.copy()
+            elif player.color == Color.GREEN:
+                player.pawns[player.id + '1'] = Location.GREEN_START_EXIT.value.copy()
+            elif player.color == Color.RED:
+                player.pawns[player.id + '1'] = Location.RED_START_EXIT.value.copy()
+            else:  # player.color == Color.YELLOW
+                player.pawns[player.id + '1'] = Location.YELLOW_START_EXIT.value.copy()
+    do_show_card_descriptions = get_user_confirmation(f"Show card descriptions during play (recommended for beginners)?")
     print()
 
     for player in players:
         if player.player_type != PlayerType.NONEXISTENT:
-            print(f"{get_text_color(player.name[0])}{player.name}{Color.RESET.value} is", (PlayerType.COMPUTER.name.lower() if player.player_type == PlayerType.COMPUTER else PlayerType.HUMAN.name.lower()) + "-controlled")
+            print(f"{player.color.value}{player.name}{Color.RESET.value} is", player.player_type.name.lower() + "-controlled.")
 
     discard_pile = []
     random.shuffle(draw_pile)
-    last_discard_pile = discard_pile.copy()  # to show the other players what was played just before the discard pile got reshuffled in case the pile was (re)shuffled since the player last saw it (to know what the other players played)
-    num_times_to_show_last_discard_pile = 0  # for showing the other players what was played just before the discard pile got reshuffled in case the pile was (re)shuffled since the player last saw it (to know what the other players played)
+    last_discard_pile = discard_pile.copy()  # to show the other players what was played just before the discard pile got reshuffled in case the pile was reshuffled since the player last saw it
+    num_times_to_show_last_discard_pile = 0  # for showing the other players what was played just before the discard pile got reshuffled in case the pile was reshuffled since the player last saw it
     players_turn = random.randrange(num_players)
-    input(f"{get_text_color(players[players_turn].name[0])}{players[players_turn].name}{Color.RESET.value} (randomly) goes first! Press enter to begin the game.")  # input() rather than print() so the console can immediately be cleared afterward
+    input(f"{players[players_turn].color.value}{players[players_turn].name}{Color.RESET.value} randomly goes first! Press enter to begin the game.")  # input() rather than print() so the console can be cleared immediately afterward
     clear_console()
-    for deal in range(hand_size):  # player right of the first player deals (given random deck shuffling and lack of cheating by having the computer deal, doing the deal this (the usual) way is only for appearances)
+    for deal in range(hand_size):  # player right of the first player deals
         player_to_start_deal_to = (players_turn + num_players - 1) % num_players  # deal starts with the player left of the dealer
         for player_to_deal_to_offset in range(num_players):
             players[(player_to_start_deal_to + player_to_deal_to_offset) % num_players].cards_in_hand.append(draw_pile.pop())
@@ -906,7 +904,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
             all_pawns.update(player.pawns)
         if do_show_card_descriptions:
             print("    1: Move a friendly pawn forward one space, or move a friendly pawn from start.")
-            print("    2: Move a friendly pawn forward two spaces, or move a friendly pawn from start. Draw again.")
+            print("    2: Move a friendly pawn forward two spaces, or move a friendly pawn from start. Then draw again.")
             print("    3: Move a friendly pawn forward three spaces.")
             print("    4: Move a friendly pawn backward four spaces.")
             print("    5: Move a friendly pawn forward five spaces.")
@@ -915,14 +913,16 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
             print("   10: Move a friendly pawn forward ten spaces, or move a friendly pawn backward one space.")
             print("   11: Move a friendly pawn forward eleven spaces, or swap the location of a friendly pawn and another player's pawn. (Does not work for pawns in their start, home, or safety zone.)")
             print("   12: Move a friendly pawn forward twelve spaces.")
-            print("Sorry: Move a friendly pawn from start to a space occupied by another player's pawn, bumping that pawn back to its owner's start. (Does not work on pawns in their home or safety zone)")
-        print_current_gameboard(all_pawns)
+            print("Sorry: Move a friendly pawn from start to a space occupied by another player's pawn, bumping that pawn back to its owner's start. (Does not work on pawns in their home or safety zone.)")
+        print_current_game_board(all_pawns)
         if num_times_to_show_last_discard_pile != 0:
             num_times_to_show_last_discard_pile -= 1
             print_last_discard_pile(last_discard_pile)
         print_discard_pile(discard_pile)
-        input(f"{get_text_color(player_to_play.name[0])}{player_to_play.name}'s{Color.RESET.value} turn (press enter to continue)") if player_to_play.player_type == PlayerType.HUMAN else print(f"{get_text_color(player_to_play.name[0])}{player_to_play.name}'s{Color.RESET.value} turn")
-        if player_to_play.player_type == PlayerType.HUMAN:
+        if player_to_play.player_type == PlayerType.COMPUTER:
+            print(f"{player_to_play.color.value}{player_to_play.name}'s{Color.RESET.value} turn.")
+        else:
+            input(f"{player_to_play.color.value}{player_to_play.name}'s{Color.RESET.value} turn. (Press enter to continue.)")
             print_hand_of_cards(player_to_play)
 
         is_valid_play = False
@@ -936,7 +936,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
         num_played_2s = 0  # count played '2's rather than have a boolean flag in case not is_immediate_draw_after_playing_a_2 so the correct number of extra draws can be known
         possible_plays = []
         while not is_valid_play:
-            is_valid_play = True  # to be corrected as necessary
+            is_valid_play = True
             if hand_size != 0:
                 card_to_play = None
             if player_to_play.player_type == PlayerType.HUMAN:
@@ -954,8 +954,8 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                             card_to_play = None
                             continue  # do nothing but ask for input again
                     if card_to_play in player_to_play.cards_in_hand:
-                        selected_card_has_some_valid_play = False  # to be corrected as necessary
-                        is_no_valid_movement_for_2 = True  # to be corrected as necessary
+                        selected_card_has_some_valid_play = False
+                        is_no_valid_movement_for_2 = True
                         possible_plays = enumerate_possible_plays(player_to_play.cards_in_hand, player_to_play.name, all_pawns, are_teams, False, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played)
                         for possible_play in possible_plays:
                             if possible_play['card_to_play'] == card_to_play:
@@ -1052,9 +1052,9 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                     if not do_no_movement_for_2:
                         play_card(card_to_play, pawn_targets, all_pawns)
                         pawn_targets = []
-                        for pawn in all_pawns:  # need to update the players' copies of the pawns with any adjustments
+                        for pawn in all_pawns:  # update the players' copies of the pawns
                             for player in players:
-                                if player.name[0] == pawn[0]:
+                                if player.id == pawn[0]:
                                     player.pawns.update({pawn: all_pawns[pawn]})
                                     break
                     player_to_play.cards_in_hand.remove(card_to_play)
@@ -1065,7 +1065,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                         if is_card_after_playing_a_2_force_played:  # otherwise card_to_play will be reset at the beginning of the next loop iteration
                             card_to_play = drawn_card
                     is_valid_play = False  # need to complete the play by playing another card
-                    print_current_gameboard(all_pawns)
+                    print_current_game_board(all_pawns)
                     if num_times_to_show_last_discard_pile != 0:
                         print_last_discard_pile(last_discard_pile)
                     print_discard_pile(discard_pile)
@@ -1075,7 +1075,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                 is_turn_done = False
                 forced_card = []
                 while not is_turn_done:
-                    is_turn_done = True  # to be corrected as necessary
+                    is_turn_done = True
                     possible_plays = enumerate_possible_plays(player_to_play.cards_in_hand if not forced_card else forced_card, player_to_play.name, all_pawns, are_teams, False, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
                     max_score = 0
                     index_of_play_with_max_score = None
@@ -1092,9 +1092,9 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
                         is_turn_done = False
                         if pawn_targets:
                             play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_one)
-                            for pawn in all_pawns:  # need to update the players' copies of the pawns with any adjustments
+                            for pawn in all_pawns:  # update the players' copies of the pawns
                                 for player in players:
-                                    if player.name[0] == pawn[0]:
+                                    if player.id == pawn[0]:
                                         player.pawns.update({pawn: all_pawns[pawn]})
                                         break
                         player_to_play.cards_in_hand.remove(card_to_play)
@@ -1110,9 +1110,9 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
 
         if 'd' not in pawn_targets:
             play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_one)
-            for pawn in all_pawns:  # need to update the players' copies of the pawns with any adjustments
+            for pawn in all_pawns:  # update all players' copies of the pawns
                 for player in players:
-                    if player.name[0] == pawn[0]:
+                    if player.id == pawn[0]:
                         player.pawns.update({pawn: all_pawns[pawn]})
                         break
         player_to_play.cards_in_hand.remove(card_to_play)
@@ -1130,7 +1130,7 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
         if player_to_play.player_type == PlayerType.HUMAN:
             clear_console()
 
-        is_game_won = True  # to be corrected as necessary
+        is_game_won = True
         for pawn in player_to_play.pawns:
             if player_to_play.pawns[pawn] != SpecialLocation.HOME.value:
                 is_game_won = False
@@ -1148,9 +1148,10 @@ def sorry_boardgame():  # returns zero on success and nonzero (some other intege
     for player in players:
         all_pawns.update(player.pawns)
     print_board(all_pawns)
+
     victors = []
     for player in players:
-        is_player_victor = True  # to be corrected as necessary
+        is_player_victor = True
         for pawn in player.pawns:
             if player.pawns[pawn] != SpecialLocation.HOME.value:
                 is_player_victor = False
