@@ -19,7 +19,7 @@ import random
 from enum import Enum
 from os import name
 from subprocess import run
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 
 
 class Color(Enum):  # maps color names to strings that, when printed, turn subsequent text that color
@@ -129,25 +129,25 @@ def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawn
         while board_line.find('/      \\', start_of_substring_search_index) != -1 or board_line.find('\\      /', start_of_substring_search_index) != -1:
             start_of_substring_search_index = max(board_line.find('/      \\', start_of_substring_search_index), board_line.find('\\      /', start_of_substring_search_index))  # looking at the sample board provided, one notices that '/      \\' and '\\      /' never both occur on the same line (therefore one of the find() will return -1 and the other whatever was found)
             length_of_found_string = len('/      \\')  # also equals len('\\      /')
-            player_letter = None  # the first letter of the name of the player this special location belongs to
-            special_location = None  # whether this special location is a start or home area
+            player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
+            special_location: SpecialLocation | None = None  # whether this special location is a start or home area
             if board_line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
-                    special_location = (SpecialLocation.START.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.HOME.value)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.RED.name[0]
-                    special_location = (SpecialLocation.HOME.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.START.value)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
             else:  # looking at the sample board provided, one notices that the lack of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
-                    special_location = (SpecialLocation.HOME.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.START.value)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.BLUE.name[0]
-                    special_location = (SpecialLocation.START.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.HOME.value)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
             pawn_index = 0
             for pawn_label in all_pawns:
-                if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location and not is_which_pawns_placed[pawn_index]:
+                if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location.value and not is_which_pawns_placed[pawn_index]:
                     board_line = board_line[:start_of_substring_search_index + 3] + pawn_label + board_line[start_of_substring_search_index + 3 + len(pawn_label):]
                     is_which_pawns_placed[pawn_index] = True
                     break  # no more all_pawns can fit in the special location on this line
@@ -159,25 +159,25 @@ def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawn
             start_of_substring_search_index = board_line.find('|        |', start_of_substring_search_index)
             length_of_found_string = len('|        |')
             is_a_slot_occupied = False
-            player_letter = None  # the first letter of the name of the player this special location belongs to
-            special_location = None  # whether this special location is a start or home area
+            player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
+            special_location: SpecialLocation | None = None  # whether this special location is a start or home area
             if board_line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
-                    special_location = (SpecialLocation.HOME.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.START.value)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.BLUE.name[0]
-                    special_location = (SpecialLocation.START.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.HOME.value)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
             else:  # looking at the sample board provided, one notices that the lack of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
-                    special_location = (SpecialLocation.START.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.HOME.value)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.RED.name[0]
-                    special_location = (SpecialLocation.HOME.value if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.START.value)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
             pawn_index = 0
             for pawn_label in all_pawns:
-                if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location and not is_which_pawns_placed[pawn_index]:
+                if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location.value and not is_which_pawns_placed[pawn_index]:
                     board_line = board_line[:start_of_substring_search_index + 2 + 4 * is_a_slot_occupied] + pawn_label + board_line[start_of_substring_search_index + 2 + 4 * is_a_slot_occupied + len(pawn_label):]
                     is_which_pawns_placed[pawn_index] = True
                     if is_a_slot_occupied:  # no more pawns can fit in the special location on this line
@@ -188,7 +188,7 @@ def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawn
 
     if line_y_pos in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:
         board_line_with_slides_colored = ''
-        character_being_colored = None
+        character_being_colored: str | None = None
         for char in board_line:
             if character_being_colored is None and char in ['>', '<', '=', '0']:
                 character_being_colored = char
@@ -207,7 +207,7 @@ def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawn
             board_line = board_line[:6] + Color.GREEN.value + board_line[6:int(len(board_line) / 2)] + Color.RESET.value + (board_line[int(len(board_line) / 2)] if len(board_line) % 2 == 1 else '') + Color.BLUE.value + board_line[int(len(board_line) / 2) + (len(board_line) % 2 == 1):len(board_line) - 6] + Color.RESET.value + board_line[len(board_line) - 6:]
         if board_line[0] == '|':
             board_line_with_slides_colored = board_line[0]
-            character_being_colored = None
+            character_being_colored: str | None = None
             for board_line_index in range(1, min(board_line.find('|\033[0;3', 1) if board_line.find('|\033[0;3', 1) != -1 else len(board_line), board_line.find('+', 1) if board_line.find('+', 1) != -1 else len(board_line))):
                 if character_being_colored is None and board_line[board_line_index] in ['^', 'V', '|', '0']:
                     character_being_colored = board_line[board_line_index]
@@ -393,7 +393,7 @@ def binary_search(value_to_find, array_to_search, access_array: List[int] | None
     return current_index if min_index != max_index else None
 
 
-def move_pawn(num_spaces: int, label_of_pawn_to_move, all_pawns, name_of_player_making_move: str | None = None):  # takes the number of spaces to move the pawn of label label_of_pawn_to_move and an adjusted dictionary of all the pawns (having moved bumped pawns back to their SpecialLocation.START.value); returns (if name_of_player_making_move is provided) whether the movement was valid
+def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns, name_of_player_making_move: str | None = None):  # takes the number of spaces to move the pawn of label label_of_pawn_to_move and an adjusted dictionary of all the pawns (having moved bumped pawns back to their SpecialLocation.START.value); returns (if name_of_player_making_move is provided) whether the movement was valid
     is_movement_forward = (num_spaces > 0)
     while num_spaces != 0:
         if all_pawns[label_of_pawn_to_move] == SpecialLocation.HOME.value:
@@ -808,7 +808,7 @@ def play_card(card_to_play: str, pawn_targets, all_pawns, is_card_a_ten_as_backw
 
 
 def get_player_type(player_color: Color, default_enum: PlayerType):  # takes the player's color and an enum mapping the word to show to indicate the default option to the value to assign if the default option is chosen; returns the selected PlayerType
-    player_type = None
+    player_type: Literal['c', 'h', 'n'] | None = None
     while player_type is None or (player_type and player_type not in [PlayerType.COMPUTER.value, PlayerType.HUMAN.value, PlayerType.NONEXISTENT.value]):
         player_type = input(f"Is {player_color.value}{player_color.name.lower()}{Color.RESET.value} a {PlayerType.COMPUTER.name.lower()} ({PlayerType.COMPUTER.value}), {PlayerType.HUMAN.name.lower()} ({PlayerType.HUMAN.value}), or {PlayerType.NONEXISTENT.name.lower()} ({PlayerType.NONEXISTENT.value})? [default: {default_enum.name.lower()}] ")
     if player_type == PlayerType.COMPUTER.value:
@@ -824,7 +824,7 @@ def get_player_type(player_color: Color, default_enum: PlayerType):  # takes the
 def get_user_confirmation(message: str):  # returns True on confirmation and False on denial
     valid_confirmation_strings = ['y', 'yes']   # the first element is shown in the prompt
     valid_denial_strings = ['n', 'no']   # the first element is shown in the prompt
-    input_string = None
+    input_string: str | None = None
     while input_string not in valid_confirmation_strings and input_string not in valid_denial_strings:
         input_string = input(f"{message} [{valid_confirmation_strings[0]}/{valid_denial_strings[0]}] ").strip().lower()
     return input_string in valid_confirmation_strings
@@ -855,7 +855,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
             can_sevens_be_split_across_more_than_two_pawns = get_user_confirmation("Can sevens be split across more than two pawns?")
 
     draw_pile = ['1'] * 5 + ['2'] * 4 + ['3'] * 4 + ['4'] * 4 + ['5'] * 4 + ['7'] * 4 + ['8'] * 4 + ['10'] * 4 + ['11'] * 4 + ['12'] * 4 + ['Sorry'] * 4
-    hand_size = None
+    hand_size: int | str | None = None
     while hand_size is None or not isinstance(hand_size, int) or hand_size < 0 or hand_size > len(draw_pile) / num_players:
         hand_size = input("Hand size: [default: 5] ")
         try:
@@ -934,7 +934,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
             print_hand_of_cards(player_to_play)
 
         is_valid_play = False
-        card_to_play = None
+        card_to_play: str | None = None
         if hand_size == 0:  # immediately draw the card if there are no hands of cards
             drawn_card, num_times_to_show_last_discard_pile = draw_card(draw_pile, discard_pile, last_discard_pile, num_times_to_show_last_discard_pile, num_players)
             player_to_play.cards_in_hand.append(drawn_card)
@@ -953,11 +953,11 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                     card_to_play = input("Card to play from your hand (choose by " + (f"index (1-{len(player_to_play.cards_in_hand)})" if player_to_play.card_select_method == CardSelectMethod.BY_INDEX else "value") + "): ").strip()  # this input can be stripped of surrounding spaces since the user can always correct their decision
                     if player_to_play.card_select_method == CardSelectMethod.BY_INDEX:
                         try:
-                            card_to_play = int(card_to_play)  # correctly gives an error for empty input strings
-                            if card_to_play not in range(1, len(player_to_play.cards_in_hand) + 1):
+                            card_to_play_index = int(card_to_play)  # correctly gives an error for empty input strings
+                            if card_to_play_index not in range(1, len(player_to_play.cards_in_hand) + 1):
                                 card_to_play = None
                             else:
-                                card_to_play = player_to_play.cards_in_hand[card_to_play - 1]  # convert card_to_play to the value of the card to play to simplify (and expedite) both this while loop's condition and later code
+                                card_to_play = player_to_play.cards_in_hand[card_to_play_index - 1]  # convert card_to_play to the value of the card to play to simplify (and expedite) both this while loop's condition and later code
                         except ValueError:
                             card_to_play = None
                             continue  # do nothing but ask for input again
@@ -1086,7 +1086,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                     is_turn_done = True
                     possible_plays = enumerate_possible_plays(player_to_play.cards_in_hand if not forced_card else forced_card, player_to_play.name, all_pawns, are_teams, False, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
                     max_score = 0
-                    index_of_play_with_max_score = None
+                    index_of_play_with_max_score: int | None = None
                     index = 0
                     for possible_play in possible_plays:
                         if possible_play['play_score'] > max_score:
