@@ -401,34 +401,34 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns, name_of_pl
                 return False
             return
         elif all_pawns[label_of_pawn_to_move] == SpecialLocation.START.value:  # note that movements from the SpecialLocation.START.value are accepted, but anticipate the movement to be nonnegative
-            if label_of_pawn_to_move[0] == Color.GREEN.name[0]:
+            if label_of_pawn_to_move[0] == Color.BLUE.name[0]:
+                all_pawns[label_of_pawn_to_move] = Location.BLUE_START_EXIT.value.copy()
+            elif label_of_pawn_to_move[0] == Color.GREEN.name[0]:
                 all_pawns[label_of_pawn_to_move] = Location.GREEN_START_EXIT.value.copy()
             elif label_of_pawn_to_move[0] == Color.RED.name[0]:
                 all_pawns[label_of_pawn_to_move] = Location.RED_START_EXIT.value.copy()
-            elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
+            elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:  # check is redundant
                 all_pawns[label_of_pawn_to_move] = Location.YELLOW_START_EXIT.value.copy()
-            elif label_of_pawn_to_move[0] == Color.BLUE.name[0]:  # check is redundant
-                all_pawns[label_of_pawn_to_move] = Location.BLUE_START_EXIT.value.copy()
             break  # no further movement is allowed if the pawn is moved from its start location
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if in a safe zone
-            if label_of_pawn_to_move[0] == Color.GREEN.name[0]:
+            if label_of_pawn_to_move[0] == Color.BLUE.name[0]:
+                all_pawns[label_of_pawn_to_move][Coordinate.Y] += (-1 if is_movement_forward else 1)
+            elif label_of_pawn_to_move[0] == Color.GREEN.name[0]:
                 all_pawns[label_of_pawn_to_move][Coordinate.Y] += (1 if is_movement_forward else -1)
             elif label_of_pawn_to_move[0] == Color.RED.name[0]:
                 all_pawns[label_of_pawn_to_move][Coordinate.X] += (-1 if is_movement_forward else 1)
-            elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
+            elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:  # check is redundant
                 all_pawns[label_of_pawn_to_move][Coordinate.X] += (1 if is_movement_forward else -1)
-            elif label_of_pawn_to_move[0] == Color.BLUE.name[0]:  # check is redundant
-                all_pawns[label_of_pawn_to_move][Coordinate.Y] += (-1 if is_movement_forward else 1)
             if all_pawns[label_of_pawn_to_move] in Location.HOME_COORDINATES.value:  # if at a SpecialLocation.HOME.value location
                 all_pawns[label_of_pawn_to_move] = SpecialLocation.HOME.value
-        elif all_pawns[label_of_pawn_to_move] == Location.GREEN_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.GREEN.name[0]:  # if the pawn is green and at the entrance to the green player's safe zone
-            all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += (1 if is_movement_forward else -1)
-        elif all_pawns[label_of_pawn_to_move] == Location.RED_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.RED.name[0]:  # if the pawn is red and at the entrance to the red player's safe zone
-            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += (-1 if is_movement_forward else 1)
-        elif all_pawns[label_of_pawn_to_move] == Location.YELLOW_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.YELLOW.name[0]:  # if the pawn is yellow and at the entrance to the yellow player's safe zone
-            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += (1 if is_movement_forward else -1)
-        elif all_pawns[label_of_pawn_to_move] == Location.BLUE_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.BLUE.name[0]:  # if the pawn is blue and at the entrance to the blue player's safe zone
+        elif all_pawns[label_of_pawn_to_move] == Location.BLUE_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.BLUE.name[0]:
             all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += (-1 if is_movement_forward else 1)
+        elif all_pawns[label_of_pawn_to_move] == Location.GREEN_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.GREEN.name[0]:
+            all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += (1 if is_movement_forward else -1)
+        elif all_pawns[label_of_pawn_to_move] == Location.RED_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.RED.name[0]:
+            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += (-1 if is_movement_forward else 1)
+        elif all_pawns[label_of_pawn_to_move] == Location.YELLOW_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
+            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += (1 if is_movement_forward else -1)
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] == Coordinate.MIN_Y.value:  # if pawn is on top edge of board
             all_pawns[label_of_pawn_to_move][Coordinate.X] += (1 if is_movement_forward else -1)
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] == Coordinate.MAX_Y.value:  # if pawn is on bottom edge of board
