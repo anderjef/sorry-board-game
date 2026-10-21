@@ -10,7 +10,6 @@
 # TODO: playing until a number of points is achieved (5 points per opponent pawn not home, 25 points if opponents have at most two pawns home, 50 points if opponents have at most one pawn home, and 100 points if no opponent has any pawns home) where the winner goes first in subsequent rounds
 # TODO: use slide locations in Location enum to dynamically determine and mark the slide paths on the game board
 # TODO: scoring a play takes into consideration how other players are constrained by their cards in hand (for example, discarding is only allowed if a player had no valid plays (except possibly an '11' as a swap))
-# TODO: function annotations
 # TODO: docstrings (https://www.python.org/dev/peps/pep-0257/)
 # TODO: prompt user for confirmation of their play if their selected play has a score significantly lower than their possible play of highest score
 
@@ -18,8 +17,9 @@
 import copy
 import random
 from enum import Enum
-from subprocess import run
 from os import name
+from subprocess import run
+from typing import Any, Dict, List
 
 
 class Color(Enum):  # maps color names to strings that, when printed, turn subsequent text that color
@@ -82,7 +82,15 @@ def player_id_to_text_color(player_id):
 
 
 class Player:
-    def __init__(self, player_color, player_type, max_hand_size):
+    card_select_method: CardSelectMethod
+    cards_in_hand: List[str]
+    color: Color
+    name: str
+    id: str
+    pawns: Dict[str, SpecialLocation]
+    player_type: PlayerType
+
+    def __init__(self, player_color: Color, player_type: PlayerType, max_hand_size: int) -> None:
         self.cards_in_hand = []
         self.color = player_color
         self.name = self.color.name.lower().capitalize()
@@ -108,7 +116,7 @@ def clear_console():
         run('clear', shell=True)
 
 
-def format_board_line(board_line, line_y_pos, all_pawns, is_which_pawns_placed):  # takes a board line string, the y value of the board line, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
+def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawns_placed: bool):  # takes a board line string, the y value of the board line, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
     if board_line[0] == '|':  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with '|'
         pawn_index = 0
         for pawn_label in all_pawns:
@@ -307,24 +315,24 @@ def print_current_game_board(all_pawns):  # takes as input a dictionary mapping 
     print()
 
 
-def print_last_discard_pile(last_discard_pile):
+def print_last_discard_pile(last_discard_pile: List[str]):
     print(f"Last discard pile ({len(last_discard_pile)} card{'s' if len(last_discard_pile) != 1 else ''}):")
     print(*reversed(last_discard_pile))
     print()
 
 
-def print_discard_pile(discard_pile):
+def print_discard_pile(discard_pile: List[str]):
     print(f"Discard pile ({len(discard_pile)} card{'s' if len(discard_pile) != 1 else ''}):")
     print(*reversed(discard_pile))
     print()
 
 
-def print_hand_of_cards(player):
+def print_hand_of_cards(player: Player):
     print("Your cards in hand:")
     print(*player.cards_in_hand)
 
 
-def draw_card(draw_pile, discard_pile, last_discard_pile, num_times_to_show_last_discard_pile, num_players):  # returns the drawn card and how many times to show the last discard pile; adjusts the provided draw pile and discard pile by shuffling the discard pile back into the draw pile as necessary; also updates the last discard pile
+def draw_card(draw_pile: List[str], discard_pile: List[str], last_discard_pile: List[str], num_times_to_show_last_discard_pile: int, num_players: int):  # returns the drawn card and how many times to show the last discard pile; adjusts the provided draw pile and discard pile by shuffling the discard pile back into the draw pile as necessary; also updates the last discard pile
     if not draw_pile:
         draw_pile.extend(discard_pile)
         last_discard_pile.clear()
@@ -335,7 +343,7 @@ def draw_card(draw_pile, discard_pile, last_discard_pile, num_times_to_show_last
     return draw_pile.pop(), (num_times_to_show_last_discard_pile if discard_pile else num_players - 1)  # num_players - 1 show as not to show the last discard pile to the player that played the last card into it
 
 
-def get_teammate_letter(player_name):  # returns an empty string on error
+def get_teammate_letter(player_name: str):  # returns an empty string on error
     if player_name[0] == Color.BLUE.name[0]:
         return Color.GREEN.name[0]
     elif player_name[0] == Color.GREEN.name[0]:
@@ -357,14 +365,14 @@ def bump_pawns_at_coordinates(all_pawns, coordinates):  # moves all pawns in all
                 return
 
 
-def get_element_to_access(array_to_access, access_array):
+def get_element_to_access(array_to_access, access_array: List[int]) -> Any:
     element_to_retrieve = array_to_access
     for access_index in access_array:
         element_to_retrieve = element_to_retrieve[access_index]
     return element_to_retrieve
 
 
-def binary_search(value_to_find, array_to_search, access_array=None):  # array_to_search is allowed to be an array of arrays, and hence access_array specifies how to reach the values to search between as which element in each array level (of array_to_search) to access to ultimately reach the elements to compare (see get_element_to_access())
+def binary_search(value_to_find, array_to_search, access_array: List[int] | None = None):  # array_to_search is allowed to be an array of arrays, and hence access_array specifies how to reach the values to search between as which element in each array level (of array_to_search) to access to ultimately reach the elements to compare (see get_element_to_access())
     if not array_to_search:
         return None
     min_index = 0
@@ -385,7 +393,7 @@ def binary_search(value_to_find, array_to_search, access_array=None):  # array_t
     return current_index if min_index != max_index else None
 
 
-def move_pawn(num_spaces, label_of_pawn_to_move, all_pawns, name_of_player_making_move=None):  # takes the number of spaces to move the pawn of label label_of_pawn_to_move and an adjusted dictionary of all the pawns (having moved bumped pawns back to their SpecialLocation.START.value); returns (if name_of_player_making_move is provided) whether the movement was valid
+def move_pawn(num_spaces: int, label_of_pawn_to_move, all_pawns, name_of_player_making_move: str | None = None):  # takes the number of spaces to move the pawn of label label_of_pawn_to_move and an adjusted dictionary of all the pawns (having moved bumped pawns back to their SpecialLocation.START.value); returns (if name_of_player_making_move is provided) whether the movement was valid
     is_movement_forward = (num_spaces > 0)
     while num_spaces != 0:
         if all_pawns[label_of_pawn_to_move] == SpecialLocation.HOME.value:
@@ -470,7 +478,7 @@ def move_pawn(num_spaces, label_of_pawn_to_move, all_pawns, name_of_player_makin
         return is_bump_valid
 
 
-def is_valid_target(pawn_targets, card_value, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one):  # returns a boolean representing whether the given pawn collection can be targeted by the card in question (and given the card in question's function in the instance of a seven or ten - can_sevens_be_split_across_more_than_two_pawns is a boolean that is only used if the card is a seven and and is_card_a_ten_as_backward_one can be True, False, or None), knowing whose turn it is, the state of the board, whether there are teams, and all selected pawn targets of the card
+def is_valid_target(pawn_targets, card_value: str, name_of_player_to_play: str, all_pawns, are_teams: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_card_a_ten_as_backward_one: bool) -> bool:  # returns whether the given pawn collection can be targeted by the card in question (and given the card in question's function in the instance of a seven or ten - can_sevens_be_split_across_more_than_two_pawns is a boolean that is only used if the card is a seven and and is_card_a_ten_as_backward_one can be True, False, or None), knowing whose turn it is, the state of the board, whether there are teams, and all selected pawn targets of the card
     if 'd' in pawn_targets:  # the discarding action is presumed to already have been verified to be valid
         return len(pawn_targets) == 1
     if card_value in ['1', '2', '3', '5', '8', '10', '12'] or (card_value == '11' and len(pawn_targets) == 1):
@@ -513,7 +521,7 @@ def is_valid_target(pawn_targets, card_value, name_of_player_to_play, all_pawns,
     return False
 
 
-def is_some_valid_split_for_seven(pawn_targets, name_of_player_to_play, all_pawns, are_teams, seven_remaining_distance, can_sevens_be_split_across_more_than_two_pawns):  # card value is assumed to be '7'; returns a boolean
+def is_some_valid_split_for_seven(pawn_targets, name_of_player_to_play: str, all_pawns, are_teams: bool, seven_remaining_distance, can_sevens_be_split_across_more_than_two_pawns: bool):  # card value is assumed to be '7'
     if is_valid_target(pawn_targets, '7', name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, False):  # if valid as is (particularly used during recursion)
         return True
     for pawn_label in all_pawns:
@@ -527,29 +535,29 @@ def is_some_valid_split_for_seven(pawn_targets, name_of_player_to_play, all_pawn
     return False
 
 
-def is_some_valid_move_for_ten(pawn_targets, name_of_player_to_play, all_pawns, are_teams):
+def is_some_valid_move_for_ten(pawn_targets, name_of_player_to_play: str, all_pawns, are_teams: bool):
     return is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, True) or is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, False)
 
 
-def is_some_valid_swap_for_eleven(existing_pawn_target, name_of_player_to_play, all_pawns, are_teams):
+def is_some_valid_swap_for_eleven(existing_pawn_target, name_of_player_to_play: str, all_pawns, are_teams: bool):
     for pawn_label in all_pawns:
         if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], '11', name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
     return False
 
 
-def is_some_valid_play_for_sorry(existing_pawn_target, name_of_player_to_play, all_pawns, are_teams):
+def is_some_valid_play_for_sorry(existing_pawn_target, name_of_player_to_play: str, all_pawns, are_teams: bool):
     for pawn_label in all_pawns:
         if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], 'Sorry', name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
     return False
 
 
-def add_play_score_attribute(play, hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile):  # adds a 'play_score' attribute with a corresponding score to the play dictionary parameter according to the estimated value of executing the play using the rest of the parameters
+def add_play_score_attribute(play, hand_of_cards: List[str], name_of_player_to_play: str, all_pawns, are_teams: bool, do_return_whether_is_some: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str]):  # adds a 'play_score' attribute with a corresponding score to the play dictionary parameter according to the estimated value of executing the play using the rest of the parameters
     play['play_score'] = random.randrange(100)  # primitive (random) solution  # TODO: better scoring heuristics
 
 
-def enumerate_possible_plays(hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile=None):  # hand_of_cards is required as valid moves (e.g. discarding is only allowed when the only other valid play is playing an eleven as a swap) depend on other whether other cards have moves; do_return_whether_is_some is a boolean representing whether (if True) to return whether there is at least one valid play instead of returning an array of the enumerated valid plays; the presence of discard_pile parameter indicates to score each possible play (for a computer-controlled player)
+def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: str, all_pawns, are_teams: bool, do_return_whether_is_some: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str] | None = None):  # hand_of_cards is required as valid moves (e.g. discarding is only allowed when the only other valid play is playing an eleven as a swap) depend on other whether other cards have moves; do_return_whether_is_some is a boolean representing whether (if True) to return whether there is at least one valid play instead of returning an array of the enumerated valid plays; the presence of discard_pile parameter indicates to score each possible play (for a computer-controlled player)
     possible_plays = []  # an array containing dictionaries of the (first) card to play (card_to_play), an array of any and all pawn targets (pawn_targets) called for by the play, (if discard_pile is not None and not do_return_whether_is_some) a score (play_score) of the play, and (if the card to play is a ten) a boolean (is_card_a_ten_as_backward_one) specifying to use the ten to move a/the pawn backwards by one
     for card in hand_of_cards:
         if card in ['1', '2', '3', '4', '5', '8', '11', '12']:
@@ -654,7 +662,7 @@ def enumerate_possible_plays(hand_of_cards, name_of_player_to_play, all_pawns, a
     return possible_plays
 
 
-def determine_default_action(card_value, other_chosen_pawn_targets, all_possible_plays, all_pawns, name_of_player_making_play, are_teams):  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
+def determine_default_action(card_value: str, other_chosen_pawn_targets, all_possible_plays, all_pawns, name_of_player_making_play: str, are_teams: bool):  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
     num_possible_plays_with_selections = 0
     default_action = []  # return no additional pawn targets if default choice is to use the '11' as a forward movement of a single pawn
     is_card_a_ten_as_backward_one = None
@@ -770,7 +778,7 @@ def determine_default_action(card_value, other_chosen_pawn_targets, all_possible
     return default_action, explanation_string
 
 
-def play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_one=False):  # takes the card to play, a list of all the (labels of the) pawns to target (alternatively a dictionary of all the labels of the pawns to target mapped to how much to move each for the card 7), a to-be-adjusted dictionary of all the existing pawns, and (optionally) a flag indicating to treat the card (which must be a ten, but is not verified) as a movement backward by one; behavior is undefined if the play is invalid (see is_valid_target()) including if excessive or not enough pawn targets are provided
+def play_card(card_to_play: str, pawn_targets, all_pawns, is_card_a_ten_as_backward_one=False):  # takes the card to play, a list of all the (labels of the) pawns to target (alternatively a dictionary of all the labels of the pawns to target mapped to how much to move each for the card 7), a to-be-adjusted dictionary of all the existing pawns, and (optionally) a flag indicating to treat the card (which must be a ten, but is not verified) as a movement backward by one; behavior is undefined if the play is invalid (see is_valid_target()) including if excessive or not enough pawn targets are provided
     if card_to_play in ['1', '2'] and all_pawns[pawn_targets[0]] == SpecialLocation.START.value:
         if pawn_targets[0][0] == Color.BLUE.name[0]:
             bump_pawns_at_coordinates(all_pawns, [Location.BLUE_START_EXIT.value])
@@ -799,7 +807,7 @@ def play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_o
         move_pawn(int(card_to_play), pawn_targets[0], all_pawns)
 
 
-def get_player_type(player_color, default_enum):  # takes the player's color and an enum mapping the word to show to indicate the default option to the value to assign if the default option is chosen; returns the selected PlayerType
+def get_player_type(player_color: Color, default_enum: PlayerType):  # takes the player's color and an enum mapping the word to show to indicate the default option to the value to assign if the default option is chosen; returns the selected PlayerType
     player_type = None
     while player_type is None or (player_type and player_type not in [PlayerType.COMPUTER.value, PlayerType.HUMAN.value, PlayerType.NONEXISTENT.value]):
         player_type = input(f"Is {player_color.value}{player_color.name.lower()}{Color.RESET.value} a {PlayerType.COMPUTER.name.lower()} ({PlayerType.COMPUTER.value}), {PlayerType.HUMAN.name.lower()} ({PlayerType.HUMAN.value}), or {PlayerType.NONEXISTENT.name.lower()} ({PlayerType.NONEXISTENT.value})? [default: {default_enum.name.lower()}] ")
@@ -813,7 +821,7 @@ def get_player_type(player_color, default_enum):  # takes the player's color and
         return default_enum
 
 
-def get_user_confirmation(message):  # returns True on confirmation and False on denial
+def get_user_confirmation(message: str):  # returns True on confirmation and False on denial
     valid_confirmation_strings = ['y', 'yes']   # the first element is shown in the prompt
     valid_denial_strings = ['n', 'no']   # the first element is shown in the prompt
     input_string = None
@@ -858,7 +866,7 @@ def sorry_boardgame():  # returns zero on success and some other integer on fail
     is_immediate_draw_after_playing_a_2 = (hand_size == 0) or get_user_confirmation("Can players immediately draw after playing a 2?")
     is_card_after_playing_a_2_force_played = is_immediate_draw_after_playing_a_2 and (hand_size == 0 or get_user_confirmation("Must players play the card they just drew after playing a 2?"))
 
-    players = []  # blue, yellow, green, red (in order of play)
+    players: List[Player] = []  # blue, yellow, green, red (in order of play)
     if blue_player_type != PlayerType.NONEXISTENT:
         players.append(Player(Color.BLUE, blue_player_type, hand_size))
     if yellow_player_type != PlayerType.NONEXISTENT:
@@ -884,7 +892,7 @@ def sorry_boardgame():  # returns zero on success and some other integer on fail
         if player.player_type != PlayerType.NONEXISTENT:
             print(f"{player.color.value}{player.name}{Color.RESET.value} is", player.player_type.name.lower() + "-controlled.")
 
-    discard_pile = []
+    discard_pile: List[str] = []
     random.shuffle(draw_pile)
     last_discard_pile = discard_pile.copy()  # to show the other players what was played just before the discard pile got reshuffled in case the pile was reshuffled since the player last saw it
     num_times_to_show_last_discard_pile = 0  # for showing the other players what was played just before the discard pile got reshuffled in case the pile was reshuffled since the player last saw it
@@ -1149,7 +1157,7 @@ def sorry_boardgame():  # returns zero on success and some other integer on fail
         all_pawns.update(player.pawns)
     print_board(all_pawns)
 
-    victors = []
+    victors: List[str] = []
     for player in players:
         is_player_victor = True
         for pawn in player.pawns:
