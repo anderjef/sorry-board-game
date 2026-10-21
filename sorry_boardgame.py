@@ -830,7 +830,7 @@ def get_user_confirmation(message: str):  # returns True on confirmation and Fal
     return input_string in valid_confirmation_strings
 
 
-def sorry_boardgame():  # returns zero on success and some other integer on failure
+def sorry_board_game():  # returns zero on success and some other integer on failure
     clear_console()  # clearing console at the beginning appears to be required for coloring
 
     num_players = 0
@@ -1171,5 +1171,5 @@ def sorry_boardgame():  # returns zero on success and some other integer on fail
 
 
 if __name__ == "__main__":
-    raise SystemExit(sorry_boardgame())
+    raise SystemExit(sorry_board_game())
 
