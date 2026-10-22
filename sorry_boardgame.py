@@ -116,69 +116,70 @@ def clear_console():
         run('clear', shell=True)
 
 
-def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawns_placed: bool):  # takes a board line string, the y value of the board line, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
-    if board_line[0] == '|':  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with '|'
+def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed: bool):  # takes a board line string, the board line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
+    line_y_pos = int(line_num / 2)
+    if line[0] == '|':  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with '|'
         pawn_index = 0
         for pawn_label in all_pawns:
             if isinstance(all_pawns[pawn_label], dict) and all_pawns[pawn_label][Coordinate.Y] == line_y_pos:
-                board_line = board_line[:all_pawns[pawn_label][Coordinate.X] * 5 + 2] + pawn_label + board_line[all_pawns[pawn_label][Coordinate.X] * 5 + 2 + len(pawn_label):]
+                line = line[:all_pawns[pawn_label][Coordinate.X] * 5 + 2] + pawn_label + line[all_pawns[pawn_label][Coordinate.X] * 5 + 2 + len(pawn_label):]
                 is_which_pawns_placed[pawn_index] = True
             pawn_index += 1
-    if any(element in board_line for element in ['/      \\', '\\      /', '|        |']):  # board_line contains a location a pawn in a SpecialLocation.START.value or SpecialLocation.HOME.value location may belong in
+    if any(element in line for element in ['/      \\', '\\      /', '|        |']):  # line contains a location a pawn in a SpecialLocation.START.value or SpecialLocation.HOME.value location may belong in
         start_of_substring_search_index = 0
-        while board_line.find('/      \\', start_of_substring_search_index) != -1 or board_line.find('\\      /', start_of_substring_search_index) != -1:
-            start_of_substring_search_index = max(board_line.find('/      \\', start_of_substring_search_index), board_line.find('\\      /', start_of_substring_search_index))  # looking at the sample board provided, one notices that '/      \\' and '\\      /' never both occur on the same line (therefore one of the find() will return -1 and the other whatever was found)
+        while line.find('/      \\', start_of_substring_search_index) != -1 or line.find('\\      /', start_of_substring_search_index) != -1:
+            start_of_substring_search_index = max(line.find('/      \\', start_of_substring_search_index), line.find('\\      /', start_of_substring_search_index))  # looking at the sample board provided, one notices that '/      \\' and '\\      /' never both occur on the same line (therefore one of the find() will return -1 and the other whatever was found)
             length_of_found_string = len('/      \\')  # also equals len('\\      /')
             player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
             special_location: SpecialLocation | None = None  # whether this special location is a start or home area
-            if board_line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
-                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
+            if line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
+                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.RED.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
             else:  # looking at the sample board provided, one notices that the lack of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
-                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
+                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.BLUE.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
             pawn_index = 0
             for pawn_label in all_pawns:
                 if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location.value and not is_which_pawns_placed[pawn_index]:
-                    board_line = board_line[:start_of_substring_search_index + 3] + pawn_label + board_line[start_of_substring_search_index + 3 + len(pawn_label):]
+                    line = line[:start_of_substring_search_index + 3] + pawn_label + line[start_of_substring_search_index + 3 + len(pawn_label):]
                     is_which_pawns_placed[pawn_index] = True
                     break  # no more all_pawns can fit in the special location on this line
                 pawn_index += 1
             start_of_substring_search_index += length_of_found_string  # continue the search for special locations from beyond what was last found
 
         start_of_substring_search_index = 0
-        while board_line.find('|        |', start_of_substring_search_index) != -1:
-            start_of_substring_search_index = board_line.find('|        |', start_of_substring_search_index)
+        while line.find('|        |', start_of_substring_search_index) != -1:
+            start_of_substring_search_index = line.find('|        |', start_of_substring_search_index)
             length_of_found_string = len('|        |')
             is_a_slot_occupied = False
             player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
             special_location: SpecialLocation | None = None  # whether this special location is a start or home area
-            if board_line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
-                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
+            if line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
+                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.BLUE.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
             else:  # looking at the sample board provided, one notices that the lack of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
-                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 2) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
+                if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < len(board_line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
+                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.RED.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(board_line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(board_line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(board_line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
+                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
             pawn_index = 0
             for pawn_label in all_pawns:
                 if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location.value and not is_which_pawns_placed[pawn_index]:
-                    board_line = board_line[:start_of_substring_search_index + 2 + 4 * is_a_slot_occupied] + pawn_label + board_line[start_of_substring_search_index + 2 + 4 * is_a_slot_occupied + len(pawn_label):]
+                    line = line[:start_of_substring_search_index + 2 + 4 * is_a_slot_occupied] + pawn_label + line[start_of_substring_search_index + 2 + 4 * is_a_slot_occupied + len(pawn_label):]
                     is_which_pawns_placed[pawn_index] = True
                     if is_a_slot_occupied:  # no more pawns can fit in the special location on this line
                         break
@@ -189,7 +190,7 @@ def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawn
     if line_y_pos in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:
         board_line_with_slides_colored = ''
         character_being_colored: str | None = None
-        for char in board_line:
+        for char in line:
             if character_being_colored is None and char in ['>', '<', '=', '0']:
                 character_being_colored = char
                 board_line_with_slides_colored += (Color.GREEN.value if line_y_pos == 0 else Color.BLUE.value)
@@ -197,116 +198,116 @@ def format_board_line(board_line: str, line_y_pos: int, all_pawns, is_which_pawn
                 character_being_colored = None
                 board_line_with_slides_colored += Color.RESET.value
             board_line_with_slides_colored += char
-        board_line = board_line_with_slides_colored
+        line = board_line_with_slides_colored
     else:
         if line_y_pos < int(Coordinate.MAX_Y.value / 2) + 1:
-            board_line = board_line[:6] + Color.GREEN.value + board_line[6:int(len(board_line) / 2)] + Color.RESET.value + (board_line[int(len(board_line) / 2)] if len(board_line) % 2 == 1 else '') + Color.RED.value + board_line[int(len(board_line) / 2) + (len(board_line) % 2 == 1):len(board_line) - 6] + Color.RESET.value + board_line[len(board_line) - 6:]
+            line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.RED.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
         elif line_y_pos > int(Coordinate.MAX_Y.value / 2) + 1:
-            board_line = board_line[:6] + Color.YELLOW.value + board_line[6:int(len(board_line) / 2)] + Color.RESET.value + (board_line[int(len(board_line) / 2)] if len(board_line) % 2 == 1 else '') + Color.BLUE.value + board_line[int(len(board_line) / 2) + (len(board_line) % 2 == 1):len(board_line) - 6] + Color.RESET.value + board_line[len(board_line) - 6:]
+            line = line[:6] + Color.YELLOW.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
         else:  # line_y_pos == int(Coordinate.MAX_Y.value / 2) + 1
-            board_line = board_line[:6] + Color.GREEN.value + board_line[6:int(len(board_line) / 2)] + Color.RESET.value + (board_line[int(len(board_line) / 2)] if len(board_line) % 2 == 1 else '') + Color.BLUE.value + board_line[int(len(board_line) / 2) + (len(board_line) % 2 == 1):len(board_line) - 6] + Color.RESET.value + board_line[len(board_line) - 6:]
-        if board_line[0] == '|':
-            board_line_with_slides_colored = board_line[0]
+            line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
+        if line[0] == '|':
+            board_line_with_slides_colored = line[0]
             character_being_colored: str | None = None
-            for board_line_index in range(1, min(board_line.find('|\033[0;3', 1) if board_line.find('|\033[0;3', 1) != -1 else len(board_line), board_line.find('+', 1) if board_line.find('+', 1) != -1 else len(board_line))):
-                if character_being_colored is None and board_line[board_line_index] in ['^', 'V', '|', '0']:
-                    character_being_colored = board_line[board_line_index]
+            for board_line_index in range(1, min(line.find('|\033[0;3', 1) if line.find('|\033[0;3', 1) != -1 else len(line), line.find('+', 1) if line.find('+', 1) != -1 else len(line))):
+                if character_being_colored is None and line[board_line_index] in ['^', 'V', '|', '0']:
+                    character_being_colored = line[board_line_index]
                     board_line_with_slides_colored += Color.YELLOW.value
-                elif character_being_colored is not None and board_line[board_line_index] != character_being_colored:
+                elif character_being_colored is not None and line[board_line_index] != character_being_colored:
                     character_being_colored = None
                     board_line_with_slides_colored += Color.RESET.value
-                board_line_with_slides_colored += board_line[board_line_index]
-            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and board_line[min(board_line.find('|\033[0;3', 1) if board_line.find('|\033[0;3', 1) != -1 else len(board_line), board_line.find('+', 1) if board_line.find('+', 1) != -1 else len(board_line))] != character_being_colored else '') + board_line[min(board_line.find('|\033[0;3', 1) if board_line.find('|\033[0;3', 1) != -1 else len(board_line), board_line.find('+', 1) if board_line.find('+', 1) != -1 else len(board_line)):max(board_line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, board_line.rfind('+', 0, -1) + len('+') - 1) + 1]
+                board_line_with_slides_colored += line[board_line_index]
+            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and line[min(line.find('|\033[0;3', 1) if line.find('|\033[0;3', 1) != -1 else len(line), line.find('+', 1) if line.find('+', 1) != -1 else len(line))] != character_being_colored else '') + line[min(line.find('|\033[0;3', 1) if line.find('|\033[0;3', 1) != -1 else len(line), line.find('+', 1) if line.find('+', 1) != -1 else len(line)):max(line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, line.rfind('+', 0, -1) + len('+') - 1) + 1]
             character_being_colored = None
-            for board_line_index in range(max(board_line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, board_line.rfind('+', 0, -1) + len('+') - 1) + 1 - len(board_line), -1):
-                if character_being_colored is None and board_line[board_line_index] in ['^', 'V', '|', '0']:
-                    character_being_colored = board_line[board_line_index]
+            for board_line_index in range(max(line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, line.rfind('+', 0, -1) + len('+') - 1) + 1 - len(line), -1):
+                if character_being_colored is None and line[board_line_index] in ['^', 'V', '|', '0']:
+                    character_being_colored = line[board_line_index]
                     board_line_with_slides_colored += Color.RED.value
-                elif character_being_colored is not None and board_line[board_line_index] != character_being_colored:
+                elif character_being_colored is not None and line[board_line_index] != character_being_colored:
                     character_being_colored = None
                     board_line_with_slides_colored += Color.RESET.value
-                board_line_with_slides_colored += board_line[board_line_index]
-            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and board_line[-1] != character_being_colored else '') + board_line[-1]
-            board_line = board_line_with_slides_colored
-    if board_line[0] == '|':
+                board_line_with_slides_colored += line[board_line_index]
+            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and line[-1] != character_being_colored else '') + line[-1]
+            line = board_line_with_slides_colored
+    if line[0] == '|':
         for pawn_label in all_pawns:  # color pawns on the border
             pawn_color = player_id_to_text_color(pawn_label[0])
             if line_y_pos in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:
-                board_line = board_line.replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() is provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
+                line = line.replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() is provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
             else:
-                board_line = board_line[:board_line.find('|\033[0;3', 1)].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1) + board_line[board_line.find('|\033[0;3', 1):board_line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1] + board_line[board_line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1:].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() are provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
-    return board_line
+                line = line[:line.find('|\033[0;3', 1)].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1) + line[line.find('|\033[0;3', 1):line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1] + line[line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1:].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() are provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
+    return line
 
 
 def print_board(all_pawns):
     is_which_pawns_placed = [False] * len(all_pawns)  # specifically for when a pawns' location is SpecialLocation.START.value or SpecialLocation.HOME.value
-    board_line_num = 0
+    line_num = 0
     print('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+')
-    board_line_num += 1
-    print(format_board_line('|    |>>>>|====|====|0000|    |    |    |    |>>>>|====|====|====|0000|    |    |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
+    line_num += 1
+    print(format_board_line('|    |>>>>|====|====|0000|    |    |    |    |>>>>|====|====|====|0000|    |    |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
     print('+----+---++----++---+----+----+----+----+----+----+----+----+----+----+----+----+')
-    board_line_num += 1
-    print(format_board_line('|    |   ||    ||  /      \\                 ----                           |VVVV|', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+   ++----++ |        |              /      \\+====+====+====+====+====+----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|0000|   ||    ||  \\      /              |        |    |    |    |    |    | || |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+   ++----++    ----                 \\      /+====+====+====+====+====+----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('| || |   ||    ||                           ----                     ----  | || |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+   ++----++                                                  /      \\+----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('| || |   ||    ||                                                 |        |0000|', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+   ++----++                                                  \\      /+----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('| || |   ||    ||                                                    ----  |    |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+   ++----++                                                          +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|^^^^|   /      \\                                                          |    |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+  |        |                                                         +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|    |   \\      /                                                          |    |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+     ----                                                   ----     +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|    |                                                          /      \\   |    |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+                                                         |        |  +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|    |                                                          \\      /   |VVVV|', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+                                                          ++----++   +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|    |  ----                                                    ||    ||   | || |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+/      \\                                                  ++----++   +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|0000|        |                                                 ||    ||   | || |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+\\      /                                                  ++----++   +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('| || |  ----                     ----                           ||    ||   | || |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+====+====+====+====+====+/      \\                 ----    ++----++   +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('| || |    |    |    |    |    |        |              /      \\  ||    ||   |0000|', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('+----+====+====+====+====+====+\\      /              |        | ++----++   +----+', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
-    print(format_board_line('|^^^^|                           ----                 \\      /  ||    ||   |    |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    board_line_num += 1
+    line_num += 1
+    print(format_board_line('|    |   ||    ||  /      \\                 ----                           |VVVV|', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+   ++----++ |        |              /      \\+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|0000|   ||    ||  \\      /              |        |    |    |    |    |    | || |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+   ++----++    ----                 \\      /+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('| || |   ||    ||                           ----                     ----  | || |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+   ++----++                                                  /      \\+----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('| || |   ||    ||                                                 |        |0000|', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+   ++----++                                                  \\      /+----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('| || |   ||    ||                                                    ----  |    |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+   ++----++                                                          +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|^^^^|   /      \\                                                          |    |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+  |        |                                                         +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|    |   \\      /                                                          |    |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+     ----                                                   ----     +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|    |                                                          /      \\   |    |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+                                                         |        |  +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|    |                                                          \\      /   |VVVV|', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+                                                          ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|    |  ----                                                    ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+/      \\                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|0000|        |                                                 ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+\\      /                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('| || |  ----                     ----                           ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+====+====+====+====+====+/      \\                 ----    ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('| || |    |    |    |    |    |        |              /      \\  ||    ||   |0000|', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('+----+====+====+====+====+====+\\      /              |        | ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
+    print(format_board_line('|^^^^|                           ----                 \\      /  ||    ||   |    |', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
     print('+----+----+----+----+----+----+----+----+----+----+----+----+---++----++---+----+')
-    board_line_num += 1
-    print(format_board_line('|    |    |0000|====|====|====|<<<<|    |    |    |    |0000|====|====|<<<<|    |', int(board_line_num / 2), all_pawns, is_which_pawns_placed))
-    # board_line_num += 1  # unused/unnecessary
+    line_num += 1
+    print(format_board_line('|    |    |0000|====|====|====|<<<<|    |    |    |    |0000|====|====|<<<<|    |', line_num, all_pawns, is_which_pawns_placed))
+    # line_num += 1  # unused/unnecessary
     print('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+')
-    # board_line_num += 1  # unused/unnecessary
+    # line_num += 1  # unused/unnecessary
 
 
 def print_current_game_board(all_pawns):  # takes as input a dictionary mapping pawn labels to their present location
