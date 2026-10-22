@@ -87,7 +87,7 @@ class Player:
     color: Color
     name: str
     id: str
-    pawns: Dict[str, SpecialLocation]
+    pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']]
     player_type: PlayerType
 
     def __init__(self, player_color: Color, player_type: PlayerType, max_hand_size: int) -> None:
