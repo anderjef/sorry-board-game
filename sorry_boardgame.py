@@ -1124,11 +1124,10 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
         players_turn += 1
         players_turn %= num_players
 
-    print("State of the game board:")
     all_pawns = {}
     for player in players:
         all_pawns.update(player.pawns)
-    print_board(all_pawns)
+    print_current_game_board(all_pawns)
 
     victors: List[str] = []
     for player in players:
