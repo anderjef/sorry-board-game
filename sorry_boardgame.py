@@ -5,13 +5,13 @@
 # TODO: change how the end of slides are labeled as the '0's can be hard to read through
 # TODO: as a player plays a 7, give them the ability to undo how they have divvied up the movements (as opposed to cancelling the operation and starting from scratch)
 # TODO: better display for getting a number in a range from a user such that if there is only one numerical option, the user understands this and that inputting the sole number shown indicates using that number as the input value
-# TODO: if there is a default play on a turn, don't allow the player to try to pick a different valid play for the given card (unless the default play is not the only play)
-# TODO: some "invalid play" message when the user attempts an invalid play
+# TODO: if there is a default play on a turn (and only one possible play), don't allow the player to try to pick a different valid play for the given card
+# TODO: some invalid-play message when a user attempts an invalid play
 # TODO: playing until a number of points is achieved (5 points per opponent pawn not home, 25 points if opponents have at most two pawns home, 50 points if opponents have at most one pawn home, and 100 points if no opponent has any pawns home) where the winner goes first in subsequent rounds
 # TODO: use slide locations in Location enum to dynamically determine and mark the slide paths on the game board
 # TODO: scoring a play takes into consideration how other players are constrained by their cards in hand (for example, discarding is only allowed if a player had no valid plays (except possibly an '11' as a swap))
 # TODO: docstrings (https://www.python.org/dev/peps/pep-0257/)
-# TODO: prompt user for confirmation of their play if their selected play has a score significantly lower than their possible play of highest score
+# TODO: prompt users for confirmation of their play if their selected play has a score significantly lower than their possible play of highest score
 
 
 import copy
