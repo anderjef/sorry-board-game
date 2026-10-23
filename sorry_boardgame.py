@@ -880,9 +880,6 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
 
     while not is_game_won:
         player_to_play = players[players_turn]
-        all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']] = {}
-        for player in players:
-            all_pawns.update(player.pawns)
         if do_show_card_descriptions:
             print("    1: Move a friendly pawn forward one space, or move a friendly pawn from start.")
             print("    2: Move a friendly pawn forward two spaces, or move a friendly pawn from start. Then draw again.")
@@ -895,6 +892,9 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
             print("   11: Move a friendly pawn forward eleven spaces, or swap the location of a friendly pawn and another player's pawn. (Does not work for pawns in their start, home, or safety zone.)")
             print("   12: Move a friendly pawn forward twelve spaces.")
             print("Sorry: Move a friendly pawn from start to a space occupied by another player's pawn, bumping that pawn back to its owner's start. (Does not work on pawns in their home or safety zone.)")
+        all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']] = {}
+        for player in players:
+            all_pawns.update(player.pawns)
         print_current_game_board(all_pawns)
         if num_times_to_show_last_discard_pile != 0:
             num_times_to_show_last_discard_pile -= 1
