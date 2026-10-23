@@ -116,7 +116,7 @@ def clear_console():
         run('clear', shell=True)
 
 
-def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed: List[bool]):  # takes a board line string, the board line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
+def print_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed: List[bool]):  # takes a board line, the line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, prints the corresponding formatted board line with any pawns on it labeled accordingly, and yields the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
     line_y_pos = int(line_num / 2)
     if line[0] == '|':  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with '|'
         pawn_index = 0
@@ -237,77 +237,77 @@ def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed
                 line = line.replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() is provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
             else:
                 line = line[:line.find('|\033[0;3', 1)].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1) + line[line.find('|\033[0;3', 1):line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1] + line[line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1:].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() are provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
-    return line
+    print(line)
 
 
 def print_board(all_pawns):
     is_which_pawns_placed = [False] * len(all_pawns)  # specifically for when a pawns' location is SpecialLocation.START.value or SpecialLocation.HOME.value
     line_num = 0
-    print(format_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|    |>>>>|====|====|0000|    |    |    |    |>>>>|====|====|====|0000|    |    |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|    |>>>>|====|====|0000|    |    |    |    |>>>>|====|====|====|0000|    |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+---++----++---+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+---++----++---+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|    |   ||    ||  /      \\                 ----                           |VVVV|', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|    |   ||    ||  /      \\                 ----                           |VVVV|', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+   ++----++ |        |              /      \\+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+   ++----++ |        |              /      \\+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|0000|   ||    ||  \\      /              |        |    |    |    |    |    | || |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|0000|   ||    ||  \\      /              |        |    |    |    |    |    | || |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+   ++----++    ----                 \\      /+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+   ++----++    ----                 \\      /+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('| || |   ||    ||                           ----                     ----  | || |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('| || |   ||    ||                           ----                     ----  | || |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+   ++----++                                                  /      \\+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+   ++----++                                                  /      \\+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('| || |   ||    ||                                                 |        |0000|', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('| || |   ||    ||                                                 |        |0000|', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+   ++----++                                                  \\      /+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+   ++----++                                                  \\      /+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('| || |   ||    ||                                                    ----  |    |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('| || |   ||    ||                                                    ----  |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+   ++----++                                                          +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+   ++----++                                                          +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|^^^^|   /      \\                                                          |    |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|^^^^|   /      \\                                                          |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+  |        |                                                         +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+  |        |                                                         +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|    |   \\      /                                                          |    |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|    |   \\      /                                                          |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+     ----                                                   ----     +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+     ----                                                   ----     +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|    |                                                          /      \\   |    |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|    |                                                          /      \\   |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+                                                         |        |  +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+                                                         |        |  +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|    |                                                          \\      /   |VVVV|', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|    |                                                          \\      /   |VVVV|', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+                                                          ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+                                                          ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|    |  ----                                                    ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|    |  ----                                                    ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+/      \\                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+/      \\                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|0000|        |                                                 ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|0000|        |                                                 ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+\\      /                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+\\      /                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('| || |  ----                     ----                           ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('| || |  ----                     ----                           ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+====+====+====+====+====+/      \\                 ----    ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+====+====+====+====+====+/      \\                 ----    ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('| || |    |    |    |    |    |        |              /      \\  ||    ||   |0000|', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('| || |    |    |    |    |    |        |              /      \\  ||    ||   |0000|', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+====+====+====+====+====+\\      /              |        | ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+====+====+====+====+====+\\      /              |        | ++----++   +----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|^^^^|                           ----                 \\      /  ||    ||   |    |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|^^^^|                           ----                 \\      /  ||    ||   |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+---++----++---+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+---++----++---+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('|    |    |0000|====|====|====|<<<<|    |    |    |    |0000|====|====|<<<<|    |', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('|    |    |0000|====|====|====|<<<<|    |    |    |    |0000|====|====|<<<<|    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print(format_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
+    print_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
 
 
