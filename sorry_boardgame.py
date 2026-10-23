@@ -116,7 +116,7 @@ def clear_console():
         run('clear', shell=True)
 
 
-def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed: bool):  # takes a board line string, the board line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
+def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed: List[bool]):  # takes a board line string, the board line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, and returns both the board line with any pawns on it labeled accordingly and the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed)
     line_y_pos = int(line_num / 2)
     if line[0] == '|':  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with '|'
         pawn_index = 0
