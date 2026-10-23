@@ -187,7 +187,7 @@ def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed
                 pawn_index += 1
             start_of_substring_search_index += length_of_found_string  # continue the search for special locations from beyond what was last found
 
-    if line_y_pos in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:
+    if line_num in [(Coordinate.MIN_Y.value + 1) * 2 - 1, (Coordinate.MAX_Y.value + 1) * 2 - 1]:
         board_line_with_slides_colored = ''
         character_being_colored: str | None = None
         for char in line:
@@ -200,12 +200,13 @@ def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed
             board_line_with_slides_colored += char
         line = board_line_with_slides_colored
     else:
-        if line_y_pos < int(Coordinate.MAX_Y.value / 2) + 1:
-            line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.RED.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
-        elif line_y_pos > int(Coordinate.MAX_Y.value / 2) + 1:
-            line = line[:6] + Color.YELLOW.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
-        else:  # line_y_pos == int(Coordinate.MAX_Y.value / 2) + 1
-            line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
+        if line_num not in [Coordinate.MIN_Y.value * 2, (Coordinate.MIN_Y.value + 1) * 2, Coordinate.MAX_Y.value * 2, (Coordinate.MAX_Y.value + 1) * 2]:
+            if line_y_pos < int(Coordinate.MAX_Y.value / 2) + 1:
+                line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.RED.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
+            elif line_y_pos > int(Coordinate.MAX_Y.value / 2) + 1:
+                line = line[:6] + Color.YELLOW.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
+            else:  # line_y_pos == int(Coordinate.MAX_Y.value / 2) + 1
+                line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
         if line[0] == '|':
             board_line_with_slides_colored = line[0]
             character_being_colored: str | None = None
@@ -242,11 +243,11 @@ def format_board_line(line: str, line_num: int, all_pawns, is_which_pawns_placed
 def print_board(all_pawns):
     is_which_pawns_placed = [False] * len(all_pawns)  # specifically for when a pawns' location is SpecialLocation.START.value or SpecialLocation.HOME.value
     line_num = 0
-    print('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+')
+    print(format_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
     print(format_board_line('|    |>>>>|====|====|0000|    |    |    |    |>>>>|====|====|====|0000|    |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print('+----+---++----++---+----+----+----+----+----+----+----+----+----+----+----+----+')
+    print(format_board_line('+----+---++----++---+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
     print(format_board_line('|    |   ||    ||  /      \\                 ----                           |VVVV|', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
@@ -302,12 +303,12 @@ def print_board(all_pawns):
     line_num += 1
     print(format_board_line('|^^^^|                           ----                 \\      /  ||    ||   |    |', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
-    print('+----+----+----+----+----+----+----+----+----+----+----+----+---++----++---+----+')
+    print(format_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+---++----++---+----+', line_num, all_pawns, is_which_pawns_placed))
     line_num += 1
     print(format_board_line('|    |    |0000|====|====|====|<<<<|    |    |    |    |0000|====|====|<<<<|    |', line_num, all_pawns, is_which_pawns_placed))
-    # line_num += 1  # unused/unnecessary
-    print('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+')
-    # line_num += 1  # unused/unnecessary
+    line_num += 1
+    print(format_board_line('+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed))
+    line_num += 1
 
 
 def print_current_game_board(all_pawns):  # takes as input a dictionary mapping pawn labels to their present location
