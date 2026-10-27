@@ -727,7 +727,7 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
                     explanation_string += f"{'for' if card_value != '4' and (card_value != '10' or not is_card_a_ten_as_backward_one) else 'back'}ward by {(int(card_value) if not is_card_a_ten_as_backward_one else 1) if not isinstance(default_action, dict) else list(default_action.values())[i]}{' then ' if i != len(default_action) - 1 else ''}"
         else:
             if card_value == '11':  # also len(other_chosen_pawn_targets) == 1 since it was confirmed the sum of len(other_chosen_pawn_targets) and len(default_action) was 1 but len(default_action) == 0
-                explanation_string += f"moving pawn {other_chosen_pawn_targets[0]} forward by {int(card_value)}"
+                explanation_string += f"moving pawn {other_chosen_pawn_targets[0]} forward by {card_value}"
             # elif card_value == '2':  # also len(other_chosen_pawn_targets) == 0 as a '2' is the only card that could end up with no default action pawn picks while being given the option to pick more pawn targets  # deprecated for the user specifying to use the '2' only to draw being handled elsewhere
             #     explanation_string = "drawing a card without moving any pawn"  # deprecated for the user specifying to use the '2' only to draw being handled elsewhere
     elif card_value == '10':
