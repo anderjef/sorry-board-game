@@ -1158,4 +1158,3 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
 
 if __name__ == "__main__":
     raise SystemExit(sorry_board_game())
-
