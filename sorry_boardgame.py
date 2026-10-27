@@ -19,7 +19,7 @@ import random
 from enum import Enum
 from os import name
 from subprocess import run
-from typing import Any, Dict, List, Literal, Union
+from typing import Any, Dict, List, Literal, TypedDict, Union
 
 
 NestedList = Union[Any, List['NestedList']]
@@ -110,6 +110,20 @@ class Player:
                 self.card_select_method = CardSelectMethod.BY_INDEX
             else:  # self.card_select_method == CardSelectMethod.BY_VALUE.value
                 self.card_select_method = CardSelectMethod.BY_VALUE
+
+
+class Play(TypedDict):
+    card_to_play: str
+    is_card_a_ten_as_backward_one: bool
+    pawn_targets: Dict[str, int] | List[str]
+    play_score: None | int = None
+
+    def __init__(self, card_to_play: str, pawn_targets: Dict[str, int] | List[str], is_card_a_ten_as_backward_one: bool = False):
+        self.card_to_play = card_to_play
+        self.is_card_a_ten_as_backward_one = is_card_a_ten_as_backward_one
+        if self.is_card_a_ten_as_backward_one:
+            assert self.card_to_play == '10'
+        self.pawn_targets = pawn_targets
 
 
 def clear_console():
@@ -526,39 +540,39 @@ def is_some_valid_play_for_sorry(existing_pawn_target, name_of_player_to_play: s
     return False
 
 
-def add_play_score_attribute(play, hand_of_cards: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, do_return_whether_is_some: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str]):  # adds a 'play_score' attribute with a corresponding score to the play dictionary parameter according to the estimated value of executing the play using the rest of the parameters
-    play['play_score'] = random.randrange(100)  # primitive (random) solution  # TODO: better scoring heuristics
+def add_play_score_attribute(play: Play, hand_of_cards: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, do_return_whether_is_some: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str]):  # adds a play_score attribute with a corresponding score to the play dictionary parameter according to the estimated value of executing the play using the rest of the parameters
+    play.play_score = random.randrange(100)  # primitive (random) solution  # TODO: better scoring heuristics
 
 
 def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, do_return_whether_is_some: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str] | None = None):  # hand_of_cards is required as valid moves (e.g. discarding is only allowed when the only other valid play is playing an eleven as a swap) depend on other whether other cards have moves; do_return_whether_is_some is a boolean representing whether (if True) to return whether there is at least one valid play instead of returning an array of the enumerated valid plays; the presence of discard_pile parameter indicates to score each possible play (for a computer-controlled player)
-    possible_plays = []  # an array containing dictionaries of the (first) card to play (card_to_play), an array of any and all pawn targets (pawn_targets) called for by the play, (if discard_pile is not None and not do_return_whether_is_some) a score (play_score) of the play, and (if the card to play is a ten) a boolean (is_card_a_ten_as_backward_one) specifying to use the ten to move a/the pawn backwards by one
+    possible_plays: List[Play] = []  # a list containing dictionaries of the (first) card to play (card_to_play), a list of any and all pawn targets (pawn_targets) called for by the play, (if discard_pile is not None and not do_return_whether_is_some) a score (play_score) of the play, and (if the card to play is a ten) a boolean (is_card_a_ten_as_backward_one) specifying to use the ten to move a/the pawn backwards by one
     for card in hand_of_cards:
         if card in ['1', '2', '3', '4', '5', '8', '11', '12']:
             for pawn_label in all_pawns:
                 if is_valid_target([pawn_label], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):
                     if do_return_whether_is_some:
                         return True
-                    possible_plays.append({'card_to_play': card, 'pawn_targets': [pawn_label]})
-                    add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                    possible_plays.append(Play(card, [pawn_label]))
+                    add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
             if card == '2':
                 can_2_validly_move_some_pawn = False  # to be corrected as necessary
-                for possible_play in reversed(possible_plays):  # reversed possible_plays to improve time complexity as really only the last/latest element of possible_plays should be checked for 'card_to_play' equaling '2'
-                    if possible_play['card_to_play'] == '2':
+                for possible_play in reversed(possible_plays):  # reversed possible_plays to improve time complexity as really only the last/latest element of possible_plays should be checked for Play.card_to_play equaling '2'
+                    if possible_play.card_to_play == '2':
                         can_2_validly_move_some_pawn = True
                         break
                 if not can_2_validly_move_some_pawn and (not is_immediate_draw_after_playing_a_2 or len(hand_of_cards) > 1):  # notably, having a '2' in hand leads to always having a viable play, unless playing a '2' requires a follow-up card to be played (as is expected), but the player won't have any card to possibly follow-up with
                     if do_return_whether_is_some:
                         return True
-                    possible_plays.append({'card_to_play': card, 'pawn_targets': []})  # playing a 2 purely as a draw (without moving a pawn and hence an empty pawn_targets array) is a valid play if and only if the 2 cannot validly move a pawn
-                    add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                    possible_plays.append(Play(card, []))  # playing a 2 purely as a draw (without moving a pawn and hence an empty pawn_targets array) is a valid play if and only if the 2 cannot validly move a pawn
+                    add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
             elif card == '11':
                 for pawn_label_1 in all_pawns:
                     for pawn_label_2 in all_pawns:
                         if is_valid_target([pawn_label_1, pawn_label_2], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):
                             if do_return_whether_is_some:
                                 return True
-                            possible_plays.append({'card_to_play': card, 'pawn_targets': [pawn_label_1, pawn_label_2]})
-                            add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                            possible_plays.append(Play(card, [pawn_label_1, pawn_label_2]))
+                            add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
         elif card == '7':
             if can_sevens_be_split_across_more_than_two_pawns:
                 pawn_indices = [0] * int(card)  # the indices of the pawns in movable_pawns to assign each movement distance to (for a total distance of seven)
@@ -566,16 +580,16 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                 for pawn_label in all_pawns:
                     if (pawn_label[0] == name_of_player_to_play[0] or (are_teams and pawn_label[0] == get_teammate_letter(name_of_player_to_play[0]))) and all_pawns[pawn_label] not in [SpecialLocation.START.value, SpecialLocation.HOME.value]:
                         movable_pawns.append(pawn_label)
-                while pawn_indices[len(pawn_indices) - 1] != int(card):
+                while pawn_indices[-1] != int(card):
                     pawn_targets: Dict[str, int] = {}
                     for i in range(len(movable_pawns)):
                         if pawn_indices.count(i) != 0:
                             pawn_targets[movable_pawns[i]] = pawn_indices.count(i)
-                    possible_plays.append({'card_to_play': card, 'pawn_targets': pawn_targets})  # note that duplicate possible_plays entries will be generated
-                    if not is_valid_target(possible_plays[len(possible_plays) - 1]['pawn_targets'], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):  # remove the possible play if it is invalid
+                    possible_plays.append(Play(card, pawn_targets))  # note that duplicate possible_plays entries will be generated
+                    if not is_valid_target(possible_plays[-1].pawn_targets, card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):  # remove the possible play if it is invalid
                         possible_plays.pop()
                     else:
-                        add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                        add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
                     pawn_indices[0] += 1
                     for i in range(len(pawn_indices) - 1):
                         if pawn_indices[i] == len(movable_pawns):
@@ -587,111 +601,111 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                     if (pawn_label[0] == name_of_player_to_play[0] or (are_teams and pawn_label[0] == get_teammate_letter(name_of_player_to_play[0]))) and all_pawns[pawn_label] not in [SpecialLocation.START.value, SpecialLocation.HOME.value]:
                         movable_pawns.append(pawn_label)
                 for movable_pawns_index_1 in range(len(movable_pawns)):
-                    possible_plays.append({'card_to_play': card, 'pawn_targets': {movable_pawns[movable_pawns_index_1]: int(card)}})
-                    if not is_valid_target(possible_plays[len(possible_plays) - 1]['pawn_targets'], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):  # remove the possible play if it is invalid
+                    possible_plays.append(Play(card, {movable_pawns[movable_pawns_index_1]: int(card)}))
+                    if not is_valid_target(possible_plays[-1].pawn_targets, card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):  # remove the possible play if it is invalid
                         possible_plays.pop()
                     else:
-                        add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                        add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
                     for movement_count in range(1, int(card)):
                         for movable_pawns_index_2 in range(len(movable_pawns)):
-                            possible_plays.append({'card_to_play': card, 'pawn_targets': {movable_pawns[movable_pawns_index_1]: movement_count}})
+                            possible_plays.append(Play(card, {movable_pawns[movable_pawns_index_1]: movement_count}))
                             if movable_pawns_index_1 != movable_pawns_index_2:
-                                possible_plays[len(possible_plays) - 1]['pawn_targets'][movable_pawns[movable_pawns_index_2]] = int(card) - movement_count
-                            if not is_valid_target(possible_plays[len(possible_plays) - 1]['pawn_targets'], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):  # remove the possible play if it is invalid
+                                possible_plays[-1].pawn_targets[movable_pawns[movable_pawns_index_2]] = int(card) - movement_count
+                            if not is_valid_target(possible_plays[-1].pawn_targets, card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):  # remove the possible play if it is invalid
                                 possible_plays.pop()
                             else:
-                                add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                                add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
         elif card == '10':
             for pawn_label in all_pawns:
                 if is_valid_target([pawn_label], card, name_of_player_to_play, all_pawns, are_teams, None, True):
                     if do_return_whether_is_some:
                         return True
-                    possible_plays.append({'card_to_play': card, 'pawn_targets': [pawn_label], 'is_card_a_ten_as_backward_one': True})
-                    add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                    possible_plays.append(Play(card, [pawn_label], True))
+                    add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
                 if is_valid_target([pawn_label], card, name_of_player_to_play, all_pawns, are_teams, None, False):
                     if do_return_whether_is_some:
                         return True
-                    possible_plays.append({'card_to_play': card, 'pawn_targets': [pawn_label], 'is_card_a_ten_as_backward_one': False})
-                    add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                    possible_plays.append(Play(card, [pawn_label], False))
+                    add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
         elif card == 'Sorry':
             for pawn_label_1 in all_pawns:
                 for pawn_label_2 in all_pawns:
                     if is_valid_target([pawn_label_1, pawn_label_2], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):
                         if do_return_whether_is_some:
                             return True
-                        possible_plays.append({'card_to_play': card, 'pawn_targets': [pawn_label_1, pawn_label_2]})
-                        add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+                        possible_plays.append(Play(card, [pawn_label_1, pawn_label_2]))
+                        add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
     is_only_valid_plays_eleven_as_swap = True  # to be corrected as necessary
     for possible_play in possible_plays:
-        if possible_play['card_to_play'] != '11' or len(possible_play['pawn_targets']) != 2:
+        if possible_play.card_to_play != '11' or len(possible_play.pawn_targets) != 2:
             is_only_valid_plays_eleven_as_swap = False
             break
     if do_return_whether_is_some:
         return possible_plays and not is_only_valid_plays_eleven_as_swap  # do_return_whether_is_some leads to returning False if only playable move is an eleven as swap since that is the only valid move that is permitted to be ignored and enumerate_possible_plays() with the do_return_whether_is_some is used to determine if discarding is allowed
     if not possible_plays or is_only_valid_plays_eleven_as_swap:  # discarding is only an option if there are no valid plays other than possibly using an eleven as a swap
         for card in hand_of_cards:
-            possible_plays.append({'card_to_play': card, 'pawn_targets': ['d']})
-            add_play_score_attribute(possible_plays[len(possible_plays) - 1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
+            possible_plays.append(Play(card, ['d']))
+            add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_some, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
     return possible_plays
 
 
-def determine_default_action(card_value: str, other_chosen_pawn_targets, all_possible_plays, all_pawns, name_of_player_making_play: str, are_teams: bool):  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
+def determine_default_action(card_value: str, other_chosen_pawn_targets, all_possible_plays: List[Play], all_pawns, name_of_player_making_play: str, are_teams: bool):  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
     num_possible_plays_with_selections = 0
     default_action = []  # return no additional pawn targets if default choice is to use the '11' as a forward movement of a single pawn
     is_card_a_ten_as_backward_one = None
     if card_value != '11' or not other_chosen_pawn_targets or (other_chosen_pawn_targets[0][0] != name_of_player_making_play[0] and (not are_teams or other_chosen_pawn_targets[0][0] != get_teammate_letter(name_of_player_making_play[0]))):  # otherwise default action is to be playing the '11' as is (moving one pawn forward eleven spaces)
         if card_value != '7' and (card_value not in ['11', 'Sorry'] or other_chosen_pawn_targets):  # if order of pawn targets doesn't matter and card is not a 'Sorry' nor '11' with no pawn targets chosen yet
             for possible_play in all_possible_plays:
-                if possible_play['card_to_play'] == card_value:
+                if possible_play.card_to_play == card_value:
                     is_this_possible_play_an_option = True  # to be corrected as necessary
                     for pawn_target in other_chosen_pawn_targets:
-                        if pawn_target not in possible_play['pawn_targets']:
+                        if pawn_target not in possible_play.pawn_targets:
                             is_this_possible_play_an_option = False
                             break
                     if num_possible_plays_with_selections != 0:  # if some default play has already been determined
-                        if len(default_action) + len(other_chosen_pawn_targets) == len(possible_play['pawn_targets']):  # if the default play and this new possible play may be equivalent
+                        if len(default_action) + len(other_chosen_pawn_targets) == len(possible_play.pawn_targets):  # if the default play and this new possible play may be equivalent
                             is_play_equivalent = True  # to be corrected as necessary
-                            for pawn_target in possible_play['pawn_targets']:
+                            for pawn_target in possible_play.pawn_targets:
                                 if pawn_target not in other_chosen_pawn_targets and pawn_target not in default_action:
                                     is_play_equivalent = False
                             if is_play_equivalent:
-                                if card_value == '10' and default_action and is_card_a_ten_as_backward_one != possible_play['is_card_a_ten_as_backward_one']:
+                                if card_value == '10' and default_action and is_card_a_ten_as_backward_one != possible_play.is_card_a_ten_as_backward_one:
                                     is_card_a_ten_as_backward_one = None
                                 is_this_possible_play_an_option = False  # equivalent plays are disregarded
                     if is_this_possible_play_an_option:
                         num_possible_plays_with_selections += 1
                         if num_possible_plays_with_selections != 1:  # if there are multiple possible plays knowing the chosen card and existing pawn choices
                             return None, ""
-                        if card_value == '10' and 'is_card_a_ten_as_backward_one' in possible_play:
-                            is_card_a_ten_as_backward_one = possible_play['is_card_a_ten_as_backward_one']
-                        default_action = copy.deepcopy(possible_play['pawn_targets'])
+                        if card_value == '10':
+                            is_card_a_ten_as_backward_one = possible_play.is_card_a_ten_as_backward_one
+                        default_action = copy.deepcopy(possible_play.pawn_targets)
                         for pawn_target in other_chosen_pawn_targets:
                             default_action.remove(pawn_target)  # remove existing pawn targets from pawn targets to add
         elif card_value in ['11', 'Sorry']:  # '11's and 'Sorry's (with no chosen pawn targets yet) are handled separately as a default first pawn choice may present itself (if there is only one friendly pawn in home or only one opponent pawn that could be bumped)
             for possible_play in all_possible_plays:
-                if possible_play['card_to_play'] == card_value:
+                if possible_play.card_to_play == card_value:
                     num_possible_plays_with_selections += 1
                     if num_possible_plays_with_selections == 1:
-                        default_action += copy.deepcopy(possible_play['pawn_targets'])  # to be corrected as necessary (there are no other_chosen_pawn_targets to immediately remove)
+                        default_action += copy.deepcopy(possible_play.pawn_targets)  # to be corrected as necessary (there are no other_chosen_pawn_targets to immediately remove)
                     else:
                         for possible_pawn_target in default_action:
-                            if possible_pawn_target not in possible_play['pawn_targets']:  # to be a valid default pawn target, the pawn must appear in all possible plays
+                            if possible_pawn_target not in possible_play.pawn_targets:  # to be a valid default pawn target, the pawn must appear in all possible plays
                                 default_action.remove(possible_pawn_target)
             if not default_action:
                 return None, ""
         else:  # order of pawn targets does matter
             for possible_play in all_possible_plays:
-                if possible_play['card_to_play'] == card_value:
+                if possible_play.card_to_play == card_value:
                     is_this_possible_play_an_option = True  # to be corrected as necessary
                     for i in range(len(other_chosen_pawn_targets)):  # .items() is left out in case other_chosen_pawn_targets is empty
-                        if list(other_chosen_pawn_targets.items())[i] != list(possible_play['pawn_targets'].items())[i]:
+                        if list(other_chosen_pawn_targets.items())[i] != list(possible_play.pawn_targets.items())[i]:
                             is_this_possible_play_an_option = False
                             break
                     if num_possible_plays_with_selections != 0:  # if some default play has already been determined
-                        if len(default_action) + len(other_chosen_pawn_targets) == len(possible_play['pawn_targets']):  # if the default play and this new possible play may be equivalent
+                        if len(default_action) + len(other_chosen_pawn_targets) == len(possible_play.pawn_targets):  # if the default play and this new possible play may be equivalent
                             is_play_equivalent = True  # to be corrected as necessary
-                            for i in range(len(possible_play['pawn_targets'])):
-                                if (list(possible_play['pawn_targets'].items())[i] if isinstance(possible_play['pawn_targets'], dict) else possible_play['pawn_targets'][i]) != (list(other_chosen_pawn_targets.items())[i] if i < len(other_chosen_pawn_targets) else (list(default_action.items())[i - len(other_chosen_pawn_targets)]) if isinstance(default_action, dict) else default_action[i - len(other_chosen_pawn_targets)]):  # possible_play['pawn_targets'] may be a list even for a '7' if it regards discarding; default_action may be a list even for a '7' if it regards discarding
+                            for i in range(len(possible_play.pawn_targets)):
+                                if (list(possible_play.pawn_targets.items())[i] if isinstance(possible_play.pawn_targets, dict) else possible_play.pawn_targets[i]) != (list(other_chosen_pawn_targets.items())[i] if i < len(other_chosen_pawn_targets) else (list(default_action.items())[i - len(other_chosen_pawn_targets)]) if isinstance(default_action, dict) else default_action[i - len(other_chosen_pawn_targets)]):  # possible_play.pawn_targets may be a list even for a '7' if it regards discarding; default_action may be a list even for a '7' if it regards discarding
                                     is_play_equivalent = False
                             if is_play_equivalent:
                                 is_this_possible_play_an_option = False  # equivalent plays are disregarded
@@ -699,7 +713,7 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
                         num_possible_plays_with_selections += 1
                         if num_possible_plays_with_selections != 1:  # if there are multiple possible plays knowing the chosen card and existing pawn choices
                             return None, ""
-                        default_action = (dict(list(possible_play['pawn_targets'].items())[len(other_chosen_pawn_targets):]) if isinstance(possible_play['pawn_targets'], dict) else possible_play['pawn_targets'][len(other_chosen_pawn_targets):])  # possible_play['pawn_targets'] may be a list even for a '7' if it regards discarding; default_action may be a list even for a '7' if it regards discarding
+                        default_action = (dict(list(possible_play.pawn_targets.items())[len(other_chosen_pawn_targets):]) if isinstance(possible_play.pawn_targets, dict) else possible_play.pawn_targets[len(other_chosen_pawn_targets):])  # possible_play.pawn_targets may be a list even for a '7' if it regards discarding; default_action may be a list even for a '7' if it regards discarding
         if 'd' in default_action:
             return default_action, f"discarding this {card_value}"
     explanation_string = ""
@@ -721,7 +735,7 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
         if is_card_a_ten_as_backward_one is not None:
             explanation_string += f" {'for' if not is_card_a_ten_as_backward_one else 'back'}ward by {int(card_value) if not is_card_a_ten_as_backward_one else 1}"
     elif card_value == '11':
-        explanation_string = f"swapping the locations of pawns {default_action[0] if len(default_action) == 2 else other_chosen_pawn_targets[0]} and {default_action[len(default_action) - 1]}"
+        explanation_string = f"swapping the locations of pawns {default_action[0] if len(default_action) == 2 else other_chosen_pawn_targets[0]} and {default_action[-1]}"
     elif card_value == 'Sorry':  # check is redundant
         pawn_in_start = None  # the label of the pawn determined to be at its start location (according the play to be valid)
         pawn_to_move_to_start = None  # the label of the pawn determined to not be at its start location (knowing the play to be valid)
@@ -914,8 +928,8 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
             card_to_play = player_to_play.cards_in_hand[0]
         is_card_a_ten_as_backward_one = False
         pawn_targets = []  # labels of pawn(s) to target (or contains 'd' if card is to be discarded); may also temporarily contain 'c' if play is not yet valid
-        num_played_2s = 0  # count played '2's rather than have a boolean flag in case not is_immediate_draw_after_playing_a_2 so the correct number of extra draws can be known
-        possible_plays = []
+        num_played_2s = 0
+        possible_plays: List[Play] = []
         while not is_valid_play:
             is_valid_play = True
             if hand_size != 0:
@@ -939,10 +953,10 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                         is_no_valid_movement_for_2 = True
                         possible_plays = enumerate_possible_plays(player_to_play.cards_in_hand, player_to_play.name, all_pawns, are_teams, False, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played)
                         for possible_play in possible_plays:
-                            if possible_play['card_to_play'] == card_to_play:
+                            if possible_play.card_to_play == card_to_play:
                                 selected_card_has_some_valid_play = True
                                 if card_to_play == '2':
-                                    if possible_play['pawn_targets']:
+                                    if possible_play.pawn_targets:
                                         is_no_valid_movement_for_2 = False
                                     else:
                                         break
@@ -978,20 +992,20 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                                 pawn_targets.append(pawn_target)
                             else:
                                 pawn_targets[pawn_target] = 0  # arbitrarily initialize to zero
-                        if (not isinstance(pawn_targets, dict) and pawn_targets[len(pawn_targets) - 1] not in ['c', 'd']) or (isinstance(pawn_targets, dict) and list(pawn_targets.keys())[len(pawn_targets) - 1] not in ['c', 'd']):
+                        if (not isinstance(pawn_targets, dict) and pawn_targets[-1] not in ['c', 'd']) or (isinstance(pawn_targets, dict) and list(pawn_targets.keys())[-1] not in ['c', 'd']):
                             if card_to_play == '7':
                                 if pawn_target:  # for '7's, only request distance input if default choice was not utilized
                                     distance_to_move_pawn = 0
                                     while (isinstance(distance_to_move_pawn, str) and distance_to_move_pawn != 'c') or distance_to_move_pawn <= 0 or distance_to_move_pawn > seven_remaining_distance:
-                                        distance_to_move_pawn = input(f"How many spaces to move {list(pawn_targets.keys())[len(pawn_targets) - 1] if isinstance(pawn_targets, dict) else pawn_targets[len(pawn_targets) - 1]} (1-{seven_remaining_distance}) or cancel/redo card choice (c): ")
+                                        distance_to_move_pawn = input(f"How many spaces to move {list(pawn_targets.keys())[-1] if isinstance(pawn_targets, dict) else pawn_targets[-1]} (1-{seven_remaining_distance}) or cancel/redo card choice (c): ")
                                         if distance_to_move_pawn != 'c':
                                             try:
                                                 distance_to_move_pawn = int(distance_to_move_pawn)
                                             except ValueError:
                                                 continue  # do nothing but ask for input again
                                     if distance_to_move_pawn == 'c':
-                                        pawn_targets.pop(list(pawn_targets.keys())[len(pawn_targets) - 1])
-                                        pawn_targets[len(pawn_targets) - 1] = 'c'
+                                        pawn_targets.pop(list(pawn_targets.keys())[-1])
+                                        pawn_targets[-1] = 'c'
                                     else:
                                         if not isinstance(pawn_targets, dict):
                                             pawn_targets = {pawn_target: distance_to_move_pawn}  # update pawn_targets to be a dictionary specifying how much this/each pawn is desired to be moved
@@ -1008,9 +1022,9 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                                 if is_some_valid_move_for_ten(pawn_targets, player_to_play.name, all_pawns, are_teams):  # if at least one of the ways to play the ten are valid, ask the user for which method they intended (then again check if what they chose is valid)
                                     is_card_a_ten_as_backward_one = ('b' if "backward" in default_choice_string else ('f' if "forward" in default_choice_string else None))
                                     while is_card_a_ten_as_backward_one not in ['c', 'b', 'f']:
-                                        is_card_a_ten_as_backward_one = input(f"Do you want to use this card to move {pawn_targets[len(pawn_targets) - 1]} forward (f) by ten spaces, backward (b) by one space, or cancel/redo card choice (c)? ")
+                                        is_card_a_ten_as_backward_one = input(f"Do you want to use this card to move {pawn_targets[-1]} forward (f) by ten spaces, backward (b) by one space, or cancel/redo card choice (c)? ")
                                     if is_card_a_ten_as_backward_one == 'c':
-                                        pawn_targets[len(pawn_targets) - 1] = 'c'
+                                        pawn_targets[-1] = 'c'
                                         is_card_a_ten_as_backward_one = False  # reset
                                     else:
                                         is_card_a_ten_as_backward_one = (is_card_a_ten_as_backward_one == 'b')
@@ -1062,12 +1076,12 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                     index_of_play_with_max_score: int | None = None
                     index = 0
                     for possible_play in possible_plays:
-                        if possible_play['play_score'] > max_score:
-                            max_score = possible_play['play_score']
+                        if possible_play.play_score > max_score:
+                            max_score = possible_play.play_score
                             index_of_play_with_max_score = index
                         index += 1
-                    card_to_play = possible_plays[index_of_play_with_max_score]['card_to_play']
-                    pawn_targets = possible_plays[index_of_play_with_max_score]['pawn_targets']
+                    card_to_play = possible_plays[index_of_play_with_max_score].card_to_play
+                    pawn_targets = possible_plays[index_of_play_with_max_score].pawn_targets
                     if card_to_play == '2':
                         num_played_2s += 1
                         is_turn_done = False
@@ -1087,7 +1101,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                                 card_to_play = drawn_card
                                 forced_card = [card_to_play]
                     else:  # the last card to play gets handled by the logic following the loop
-                        is_card_a_ten_as_backward_one = possible_plays[index_of_play_with_max_score]['is_card_a_ten_as_backward_one'] if 'is_card_a_ten_as_backward_one' in possible_plays[index_of_play_with_max_score] else False
+                        is_card_a_ten_as_backward_one = possible_plays[index_of_play_with_max_score].is_card_a_ten_as_backward_one
 
         if 'd' not in pawn_targets:
             play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_one)
