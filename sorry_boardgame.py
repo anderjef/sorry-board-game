@@ -118,7 +118,7 @@ class Play(TypedDict):
     pawn_targets: Dict[str, int] | List[str]
     play_score: None | int = None
 
-    def __init__(self, card_to_play: str, pawn_targets: Dict[str, int] | List[str], is_card_a_ten_as_backward_one: bool = False):
+    def __init__(self, card_to_play: str, pawn_targets: Dict[str, int] | List[str], is_card_a_ten_as_backward_one: bool = False) -> None:
         self.card_to_play = card_to_play
         self.is_card_a_ten_as_backward_one = is_card_a_ten_as_backward_one
         if self.is_card_a_ten_as_backward_one:
@@ -465,7 +465,7 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: Dict[str, 
         return is_bump_valid
 
 
-def is_valid_target(pawn_targets: List[str], card_value: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_card_a_ten_as_backward_one: bool) -> bool:  # returns whether the given pawn collection can be targeted by the card in question (and given the card in question's function in the instance of a seven or ten - can_sevens_be_split_across_more_than_two_pawns is a boolean that is only used if the card is a seven and and is_card_a_ten_as_backward_one can be True, False, or None), knowing whose turn it is, the state of the board, whether there are teams, and all selected pawn targets of the card
+def is_valid_target(pawn_targets: Dict[str, int] | List[str], card_value: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_card_a_ten_as_backward_one: bool) -> bool:  # returns whether the given pawn collection can be targeted by the card in question (and given the card in question's function in the instance of a seven or ten - can_sevens_be_split_across_more_than_two_pawns is a boolean that is only used if the card is a seven and and is_card_a_ten_as_backward_one can be True, False, or None), knowing whose turn it is, the state of the board, whether there are teams, and all selected pawn targets of the card
     if 'd' in pawn_targets:  # the discarding action is presumed to already have been verified to be valid
         return len(pawn_targets) == 1
     if card_value in ['1', '2', '3', '5', '8', '10', '12'] or (card_value == '11' and len(pawn_targets) == 1):
@@ -508,7 +508,7 @@ def is_valid_target(pawn_targets: List[str], card_value: str, name_of_player_to_
     return False
 
 
-def is_any_valid_split_for_seven(pawn_targets, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, seven_remaining_distance, can_sevens_be_split_across_more_than_two_pawns: bool):  # card value is assumed to be '7'
+def is_any_valid_split_for_seven(pawn_targets: Dict[str, int], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, seven_remaining_distance: int, can_sevens_be_split_across_more_than_two_pawns: bool):  # card value is assumed to be '7'
     if is_valid_target(pawn_targets, '7', name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, False):  # if valid as is (particularly used during recursion)
         return True
     for pawn_label in all_pawns:
@@ -522,18 +522,18 @@ def is_any_valid_split_for_seven(pawn_targets, name_of_player_to_play: str, all_
     return False
 
 
-def is_any_valid_move_for_ten(pawn_targets, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
+def is_any_valid_move_for_ten(pawn_targets: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
     return is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, True) or is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, False)
 
 
-def is_any_valid_swap_for_eleven(existing_pawn_target, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
+def is_any_valid_swap_for_eleven(existing_pawn_target: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
     for pawn_label in all_pawns:
         if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], '11', name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
     return False
 
 
-def is_any_valid_play_for_sorry(existing_pawn_target, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
+def is_any_valid_play_for_sorry(existing_pawn_target: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
     for pawn_label in all_pawns:
         if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], 'Sorry', name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
@@ -649,10 +649,10 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
     return possible_plays
 
 
-def determine_default_action(card_value: str, other_chosen_pawn_targets, all_possible_plays: List[Play], all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], name_of_player_making_play: str, are_teams: bool):  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
+def determine_default_action(card_value: str, other_chosen_pawn_targets: Dict[str, int] | List[str], all_possible_plays: List[Play], all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], name_of_player_making_play: str, are_teams: bool) -> tuple[Dict[str, int] | List[str] | None, str]:  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
     num_possible_plays_with_selections = 0
-    default_action = []  # return no additional pawn targets if default choice is to use the '11' as a forward movement of a single pawn
-    is_card_a_ten_as_backward_one = None
+    default_action: Dict[str, int] | List[str] = []  # return no additional pawn targets if default choice is to use the '11' as a forward movement of a single pawn
+    is_card_a_ten_as_backward_one = False
     if card_value != '11' or not other_chosen_pawn_targets or (other_chosen_pawn_targets[0][0] != name_of_player_making_play[0] and (not are_teams or other_chosen_pawn_targets[0][0] != get_teammate_letter(name_of_player_making_play[0]))):  # otherwise default action is to be playing the '11' as is (moving one pawn forward eleven spaces)
         if card_value != '7' and (card_value not in ['11', 'Sorry'] or other_chosen_pawn_targets):  # if order of pawn targets doesn't matter and card is not a 'Sorry' nor '11' with no pawn targets chosen yet
             for possible_play in all_possible_plays:
@@ -670,7 +670,7 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
                                     is_play_equivalent = False
                             if is_play_equivalent:
                                 if card_value == '10' and default_action and is_card_a_ten_as_backward_one != possible_play.is_card_a_ten_as_backward_one:
-                                    is_card_a_ten_as_backward_one = None
+                                    is_card_a_ten_as_backward_one = False
                                 is_this_possible_play_an_option = False  # equivalent plays are disregarded
                     if is_this_possible_play_an_option:
                         num_possible_plays_with_selections += 1
@@ -731,14 +731,12 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
             # elif card_value == '2':  # also len(other_chosen_pawn_targets) == 0 as a '2' is the only card that could end up with no default action pawn picks while being given the option to pick more pawn targets  # deprecated for the user specifying to use the '2' only to draw being handled elsewhere
             #     explanation_string = "drawing a card without moving any pawn"  # deprecated for the user specifying to use the '2' only to draw being handled elsewhere
     elif card_value == '10':
-        explanation_string += f"moving pawn {default_action[0]}"
-        if is_card_a_ten_as_backward_one is not None:
-            explanation_string += f" {'for' if not is_card_a_ten_as_backward_one else 'back'}ward by {int(card_value) if not is_card_a_ten_as_backward_one else 1}"
+        explanation_string += f"moving pawn {default_action[0]} {'for' if not is_card_a_ten_as_backward_one else 'back'}ward by {int(card_value) if not is_card_a_ten_as_backward_one else 1}"
     elif card_value == '11':
         explanation_string = f"swapping the locations of pawns {default_action[0] if len(default_action) == 2 else other_chosen_pawn_targets[0]} and {default_action[-1]}"
     elif card_value == 'Sorry':  # check is redundant
-        pawn_in_start = None  # the label of the pawn determined to be at its start location (according the play to be valid)
-        pawn_to_move_to_start = None  # the label of the pawn determined to not be at its start location (knowing the play to be valid)
+        pawn_in_start: None | str = None  # the label of the pawn determined to be at its start location (according the play to be valid)
+        pawn_to_move_to_start: None | str = None  # the label of the pawn determined to not be at its start location (knowing the play to be valid)
         if other_chosen_pawn_targets:
             if other_chosen_pawn_targets[0][0] == name_of_player_making_play[0]:
                 pawn_in_start = other_chosen_pawn_targets[0]
@@ -765,7 +763,7 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
     return default_action, explanation_string
 
 
-def play_card(card_to_play: str, pawn_targets, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], is_card_a_ten_as_backward_one=False):  # takes the card to play, a list of all the (labels of the) pawns to target (alternatively a dictionary of all the labels of the pawns to target mapped to how much to move each for the card 7), a to-be-adjusted dictionary of all the existing pawns, and (optionally) a flag indicating to treat the card (which must be a ten, but is not verified) as a movement backward by one; behavior is undefined if the play is invalid (see is_valid_target()) including if excessive or not enough pawn targets are provided
+def play_card(card_to_play: str, pawn_targets: Dict[str, int] | List[str], all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], is_card_a_ten_as_backward_one=False):  # takes the card to play, a list of all the (labels of the) pawns to target (alternatively a dictionary of all the labels of the pawns to target mapped to how much to move each for the card 7), a to-be-adjusted dictionary of all the existing pawns, and (optionally) a flag indicating to treat the card (which must be a ten, but is not verified) as a movement backward by one; behavior is undefined if the play is invalid (see is_valid_target()) including if excessive or not enough pawn targets are provided
     if card_to_play in ['1', '2'] and all_pawns[pawn_targets[0]] == SpecialLocation.START.value:
         if pawn_targets[0][0] == Color.BLUE.name[0]:
             bump_pawns_at_coordinates(all_pawns, [Location.BLUE_START_EXIT.value])
@@ -927,7 +925,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
             player_to_play.cards_in_hand.append(drawn_card)
             card_to_play = player_to_play.cards_in_hand[0]
         is_card_a_ten_as_backward_one = False
-        pawn_targets = []  # labels of pawn(s) to target (or contains 'd' if card is to be discarded); may also temporarily contain 'c' if play is not yet valid
+        pawn_targets: Dict[str, int] | List[str] = []  # labels of pawn(s) to target (or contains 'd' if card is to be discarded); may also temporarily contain 'c' if play is not yet valid
         num_played_2s = 0
         possible_plays: List[Play] = []
         while not is_valid_play:
@@ -975,7 +973,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                 seven_remaining_distance = 7  # only utilized when card_to_play == '7'
                 pawn_targets = []
                 if not do_no_movement_for_2:
-                    pawn_target = None
+                    pawn_target: None | str = None
                     while 'c' not in pawn_targets and (not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one) or (num_times_eleven_prompted_validly == 1 and pawn_target)):  # have the user pick as many pawn targets as it takes to complete a valid move
                         pawn_target = None
                         if pawn_targets and card_to_play not in ['7', '10', '11', 'Sorry'] and not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one):  # if an invalid pawn_target was already provided for a card that requires exactly one pawn target and has no mistaking for what the move is intended to be (otherwise no possible moves with the last chosen pawn target has the last chosen pawn target removed separately), throw out the old/invalid pawn target
