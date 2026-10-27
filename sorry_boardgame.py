@@ -555,7 +555,7 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                     possible_plays.append(Play(card, [pawn_label]))
                     add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
             if card == '2':
-                can_2_validly_move_any_pawn = False  # to be corrected as necessary
+                can_2_validly_move_any_pawn = False
                 for possible_play in reversed(possible_plays):  # reversed possible_plays to improve time complexity as really only the last/latest element of possible_plays should be checked for Play.card_to_play equaling '2'
                     if possible_play.card_to_play == '2':
                         can_2_validly_move_any_pawn = True
@@ -635,7 +635,7 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                             return True
                         possible_plays.append(Play(card, [pawn_label_1, pawn_label_2]))
                         add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
-    is_only_valid_plays_eleven_as_swap = True  # to be corrected as necessary
+    is_only_valid_plays_eleven_as_swap = True
     for possible_play in possible_plays:
         if possible_play.card_to_play != '11' or len(possible_play.pawn_targets) != 2:
             is_only_valid_plays_eleven_as_swap = False
@@ -657,14 +657,14 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
         if card_value != '7' and (card_value not in ['11', 'Sorry'] or other_chosen_pawn_targets):  # if order of pawn targets doesn't matter and card is not a 'Sorry' nor '11' with no pawn targets chosen yet
             for possible_play in all_possible_plays:
                 if possible_play.card_to_play == card_value:
-                    is_this_possible_play_an_option = True  # to be corrected as necessary
+                    is_this_possible_play_an_option = True
                     for pawn_target in other_chosen_pawn_targets:
                         if pawn_target not in possible_play.pawn_targets:
                             is_this_possible_play_an_option = False
                             break
                     if num_possible_plays_with_selections != 0:  # if some default play has already been determined
                         if len(default_action) + len(other_chosen_pawn_targets) == len(possible_play.pawn_targets):  # if the default play and this new possible play may be equivalent
-                            is_play_equivalent = True  # to be corrected as necessary
+                            is_play_equivalent = True
                             for pawn_target in possible_play.pawn_targets:
                                 if pawn_target not in other_chosen_pawn_targets and pawn_target not in default_action:
                                     is_play_equivalent = False
@@ -696,14 +696,14 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets, all_pos
         else:  # order of pawn targets does matter
             for possible_play in all_possible_plays:
                 if possible_play.card_to_play == card_value:
-                    is_this_possible_play_an_option = True  # to be corrected as necessary
+                    is_this_possible_play_an_option = True
                     for i in range(len(other_chosen_pawn_targets)):  # .items() is left out in case other_chosen_pawn_targets is empty
                         if list(other_chosen_pawn_targets.items())[i] != list(possible_play.pawn_targets.items())[i]:
                             is_this_possible_play_an_option = False
                             break
                     if num_possible_plays_with_selections != 0:  # if some default play has already been determined
                         if len(default_action) + len(other_chosen_pawn_targets) == len(possible_play.pawn_targets):  # if the default play and this new possible play may be equivalent
-                            is_play_equivalent = True  # to be corrected as necessary
+                            is_play_equivalent = True
                             for i in range(len(possible_play.pawn_targets)):
                                 if (list(possible_play.pawn_targets.items())[i] if isinstance(possible_play.pawn_targets, dict) else possible_play.pawn_targets[i]) != (list(other_chosen_pawn_targets.items())[i] if i < len(other_chosen_pawn_targets) else (list(default_action.items())[i - len(other_chosen_pawn_targets)]) if isinstance(default_action, dict) else default_action[i - len(other_chosen_pawn_targets)]):  # possible_play.pawn_targets may be a list even for a '7' if it regards discarding; default_action may be a list even for a '7' if it regards discarding
                                     is_play_equivalent = False
