@@ -18,7 +18,7 @@ import random
 from enum import Enum
 from os import name
 from subprocess import run
-from typing import Any, Dict, List, Literal, TypedDict, Union
+from typing import Any, Dict, List, Literal, Union
 
 NestedList = Union[Any, List["NestedList"]]
 
@@ -110,7 +110,7 @@ class Player:
                 self.card_select_method = CardSelectMethod.BY_VALUE
 
 
-class Play(TypedDict):
+class Play:
     card_to_play: str
     is_card_a_ten_as_backward_one: bool
     pawn_targets: Dict[str, int] | List[str]
