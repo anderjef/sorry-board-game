@@ -1,4 +1,3 @@
-
 # TODO: configurable number of pawns per player
 # TODO: collect stats on players
 # TODO: animate pawn movements
@@ -21,22 +20,21 @@ from os import name
 from subprocess import run
 from typing import Any, Dict, List, Literal, TypedDict, Union
 
-
-NestedList = Union[Any, List['NestedList']]
+NestedList = Union[Any, List["NestedList"]]
 
 
 class Color(Enum):  # maps color names to strings that, when printed, turn subsequent text that color
-    BLUE = '\033[0;34m'
-    GREEN = '\033[0;32m'
-    RED = '\033[0;31m'
-    RESET = '\033[0;0m'
-    YELLOW = '\033[0;33m'
+    BLUE = "\033[0;34m"
+    GREEN = "\033[0;32m"
+    RED = "\033[0;31m"
+    RESET = "\033[0;0m"
+    YELLOW = "\033[0;33m"
 
 
 class PlayerType(Enum):
-    COMPUTER = 'c'
-    HUMAN = 'h'
-    NONEXISTENT = 'n'
+    COMPUTER = "c"
+    HUMAN = "h"
+    NONEXISTENT = "n"
 
 
 class Coordinate(Enum):
@@ -44,8 +42,8 @@ class Coordinate(Enum):
     MAX_Y = 15
     MIN_X = 0
     MIN_Y = 0
-    X = 'x'
-    Y = 'y'
+    X = "x"
+    Y = "y"
 
 
 class Location(Enum):
@@ -63,13 +61,13 @@ class Location(Enum):
 
 
 class SpecialLocation(Enum):
-    HOME = 'h'
-    START = 's'
+    HOME = "h"
+    START = "s"
 
 
 class CardSelectMethod(Enum):
-    BY_INDEX = 'i'
-    BY_VALUE = 'v'
+    BY_INDEX = "i"
+    BY_VALUE = "v"
 
 
 def player_id_to_text_color(player_id):
@@ -90,7 +88,7 @@ class Player:
     color: Color
     name: str
     id: str
-    pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']]
+    pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]]
     player_type: PlayerType
 
     def __init__(self, player_color: Color, player_type: PlayerType, max_hand_size: int) -> None:
@@ -122,81 +120,81 @@ class Play(TypedDict):
         self.card_to_play = card_to_play
         self.is_card_a_ten_as_backward_one = is_card_a_ten_as_backward_one
         if self.is_card_a_ten_as_backward_one:
-            assert self.card_to_play == '10'
+            assert self.card_to_play == "10"
         self.pawn_targets = pawn_targets
 
 
 def clear_console():
-    if name == 'nt':  # Windows
-        run('cls', shell=True)
+    if name == "nt":  # Windows
+        run("cls", shell=True)
     else:  # Mac or Linux (name == 'posix')
-        run('clear', shell=True)
+        run("clear", shell=True)
 
 
-def print_board_line(line: str, line_num: int, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], is_which_pawns_placed: List[bool]):  # takes a board line, the line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, prints the corresponding formatted board line with any pawns on it labeled accordingly, yields the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed), and returns the next line number
+def print_board_line(line: str, line_num: int, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], is_which_pawns_placed: List[bool]):  # takes a board line, the line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, prints the corresponding formatted board line with any pawns on it labeled accordingly, yields the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed), and returns the next line number
     line_y_pos = int(line_num / 2)
-    if line[0] == '|':  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with '|'
+    if line[0] == "|":  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with '|'
         pawn_index = 0
         for pawn_label in all_pawns:
             if isinstance(all_pawns[pawn_label], dict) and all_pawns[pawn_label][Coordinate.Y] == line_y_pos:
-                line = line[:all_pawns[pawn_label][Coordinate.X] * 5 + 2] + pawn_label + line[all_pawns[pawn_label][Coordinate.X] * 5 + 2 + len(pawn_label):]
+                line = line[: all_pawns[pawn_label][Coordinate.X] * 5 + 2] + pawn_label + line[all_pawns[pawn_label][Coordinate.X] * 5 + 2 + len(pawn_label) :]
                 is_which_pawns_placed[pawn_index] = True
             pawn_index += 1
-    if any(element in line for element in ['/      \\', '\\      /', '|        |']):  # line contains a location a pawn in a SpecialLocation.START.value or SpecialLocation.HOME.value location may belong in
+    if any(element in line for element in ["/      \\", "\\      /", "|        |"]):  # line contains a location a pawn in a SpecialLocation.START.value or SpecialLocation.HOME.value location may belong in
         start_of_substring_search_index = 0
-        while line.find('/      \\', start_of_substring_search_index) != -1 or line.find('\\      /', start_of_substring_search_index) != -1:
-            start_of_substring_search_index = max(line.find('/      \\', start_of_substring_search_index), line.find('\\      /', start_of_substring_search_index))  # looking at the sample board provided, one notices that '/      \\' and '\\      /' never both occur on the same line (therefore one of the find() will return -1 and the other whatever was found)
-            length_of_found_string = len('/      \\')  # also equals len('\\      /')
+        while line.find("/      \\", start_of_substring_search_index) != -1 or line.find("\\      /", start_of_substring_search_index) != -1:
+            start_of_substring_search_index = max(line.find("/      \\", start_of_substring_search_index), line.find("\\      /", start_of_substring_search_index))  # looking at the sample board provided, one notices that '/      \\' and '\\      /' never both occur on the same line (therefore one of the find() will return -1 and the other whatever was found)
+            length_of_found_string = len("/      \\")  # also equals len('\\      /')
             player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
             special_location: SpecialLocation | None = None  # whether this special location is a start or home area
-            if line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
+            if line[0] == "+":  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
+                    special_location = SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.RED.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
+                    special_location = SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.START  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
             else:  # looking at the sample board provided, one notices that the lack of '+' or '-' on a line with '\\      /' or '/      \\' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
+                    special_location = SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.BLUE.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
+                    special_location = SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.HOME  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
             pawn_index = 0
             for pawn_label in all_pawns:
                 if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location.value and not is_which_pawns_placed[pawn_index]:
-                    line = line[:start_of_substring_search_index + 3] + pawn_label + line[start_of_substring_search_index + 3 + len(pawn_label):]
+                    line = line[: start_of_substring_search_index + 3] + pawn_label + line[start_of_substring_search_index + 3 + len(pawn_label) :]
                     is_which_pawns_placed[pawn_index] = True
                     break  # no more all_pawns can fit in the special location on this line
                 pawn_index += 1
             start_of_substring_search_index += length_of_found_string  # continue the search for special locations from beyond what was last found
 
         start_of_substring_search_index = 0
-        while line.find('|        |', start_of_substring_search_index) != -1:
-            start_of_substring_search_index = line.find('|        |', start_of_substring_search_index)
-            length_of_found_string = len('|        |')
+        while line.find("|        |", start_of_substring_search_index) != -1:
+            start_of_substring_search_index = line.find("|        |", start_of_substring_search_index)
+            length_of_found_string = len("|        |")
             is_a_slot_occupied = False
             player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
             special_location: SpecialLocation | None = None  # whether this special location is a start or home area
-            if line[0] == '+':  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
+            if line[0] == "+":  # looking at the sample board provided, one notices that the presence of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START)  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
+                    special_location = SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.BLUE.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
+                    special_location = SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.HOME  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
             else:  # looking at the sample board provided, one notices that the lack of '+' or '-' on a line with '|        |' indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to '+'
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
-                    special_location = (SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME)  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
+                    special_location = SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.RED.name[0]
-                    special_location = (SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.START)  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
+                    special_location = SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.START  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
             pawn_index = 0
             for pawn_label in all_pawns:
                 if pawn_label[0] == player_letter and all_pawns[pawn_label] == special_location.value and not is_which_pawns_placed[pawn_index]:
-                    line = line[:start_of_substring_search_index + 2 + 4 * is_a_slot_occupied] + pawn_label + line[start_of_substring_search_index + 2 + 4 * is_a_slot_occupied + len(pawn_label):]
+                    line = line[: start_of_substring_search_index + 2 + 4 * is_a_slot_occupied] + pawn_label + line[start_of_substring_search_index + 2 + 4 * is_a_slot_occupied + len(pawn_label) :]
                     is_which_pawns_placed[pawn_index] = True
                     if is_a_slot_occupied:  # no more pawns can fit in the special location on this line
                         break
@@ -205,12 +203,12 @@ def print_board_line(line: str, line_num: int, all_pawns: Dict[str, Dict[Coordin
             start_of_substring_search_index += length_of_found_string  # continue the search for special locations from beyond what was last found
 
     if line_num in [(Coordinate.MIN_Y.value + 1) * 2 - 1, (Coordinate.MAX_Y.value + 1) * 2 - 1]:
-        board_line_with_slides_colored = ''
+        board_line_with_slides_colored = ""
         character_being_colored: str | None = None
         for char in line:
-            if character_being_colored is None and char in ['>', '<', '=', '0']:
+            if character_being_colored is None and char in [">", "<", "=", "0"]:
                 character_being_colored = char
-                board_line_with_slides_colored += (Color.GREEN.value if line_y_pos == 0 else Color.BLUE.value)
+                board_line_with_slides_colored += Color.GREEN.value if line_y_pos == 0 else Color.BLUE.value
             elif character_being_colored is not None and char != character_being_colored:
                 character_being_colored = None
                 board_line_with_slides_colored += Color.RESET.value
@@ -219,84 +217,84 @@ def print_board_line(line: str, line_num: int, all_pawns: Dict[str, Dict[Coordin
     else:
         if line_num not in [Coordinate.MIN_Y.value * 2, (Coordinate.MIN_Y.value + 1) * 2, Coordinate.MAX_Y.value * 2, (Coordinate.MAX_Y.value + 1) * 2]:
             if line_y_pos < int(Coordinate.MAX_Y.value / 2) + 1:
-                line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.RED.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
+                line = line[:6] + Color.GREEN.value + line[6 : int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else "") + Color.RED.value + line[int(len(line) / 2) + (len(line) % 2 == 1) : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
             elif line_y_pos > int(Coordinate.MAX_Y.value / 2) + 1:
-                line = line[:6] + Color.YELLOW.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
+                line = line[:6] + Color.YELLOW.value + line[6 : int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else "") + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1) : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
             else:  # line_y_pos == int(Coordinate.MAX_Y.value / 2) + 1
-                line = line[:6] + Color.GREEN.value + line[6:int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else '') + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1):len(line) - 6] + Color.RESET.value + line[len(line) - 6:]
-        if line[0] == '|':
+                line = line[:6] + Color.GREEN.value + line[6 : int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else "") + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1) : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
+        if line[0] == "|":
             board_line_with_slides_colored = line[0]
             character_being_colored: str | None = None
-            for board_line_index in range(1, min(line.find('|\033[0;3', 1) if line.find('|\033[0;3', 1) != -1 else len(line), line.find('+', 1) if line.find('+', 1) != -1 else len(line))):
-                if character_being_colored is None and line[board_line_index] in ['^', 'V', '|', '0']:
+            for board_line_index in range(1, min(line.find("|\033[0;3", 1) if line.find("|\033[0;3", 1) != -1 else len(line), line.find("+", 1) if line.find("+", 1) != -1 else len(line))):
+                if character_being_colored is None and line[board_line_index] in ["^", "V", "|", "0"]:
                     character_being_colored = line[board_line_index]
                     board_line_with_slides_colored += Color.YELLOW.value
                 elif character_being_colored is not None and line[board_line_index] != character_being_colored:
                     character_being_colored = None
                     board_line_with_slides_colored += Color.RESET.value
                 board_line_with_slides_colored += line[board_line_index]
-            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and line[min(line.find('|\033[0;3', 1) if line.find('|\033[0;3', 1) != -1 else len(line), line.find('+', 1) if line.find('+', 1) != -1 else len(line))] != character_being_colored else '') + line[min(line.find('|\033[0;3', 1) if line.find('|\033[0;3', 1) != -1 else len(line), line.find('+', 1) if line.find('+', 1) != -1 else len(line)):max(line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, line.rfind('+', 0, -1) + len('+') - 1) + 1]
+            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and line[min(line.find("|\033[0;3", 1) if line.find("|\033[0;3", 1) != -1 else len(line), line.find("+", 1) if line.find("+", 1) != -1 else len(line))] != character_being_colored else "") + line[min(line.find("|\033[0;3", 1) if line.find("|\033[0;3", 1) != -1 else len(line), line.find("+", 1) if line.find("+", 1) != -1 else len(line)) : max(line.rfind(Color.RESET.value + "|", 0, -1) + len(Color.RESET.value + "|") - 1, line.rfind("+", 0, -1) + len("+") - 1) + 1]
             character_being_colored = None
-            for board_line_index in range(max(line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1, line.rfind('+', 0, -1) + len('+') - 1) + 1 - len(line), -1):
-                if character_being_colored is None and line[board_line_index] in ['^', 'V', '|', '0']:
+            for board_line_index in range(max(line.rfind(Color.RESET.value + "|", 0, -1) + len(Color.RESET.value + "|") - 1, line.rfind("+", 0, -1) + len("+") - 1) + 1 - len(line), -1):
+                if character_being_colored is None and line[board_line_index] in ["^", "V", "|", "0"]:
                     character_being_colored = line[board_line_index]
                     board_line_with_slides_colored += Color.RED.value
                 elif character_being_colored is not None and line[board_line_index] != character_being_colored:
                     character_being_colored = None
                     board_line_with_slides_colored += Color.RESET.value
                 board_line_with_slides_colored += line[board_line_index]
-            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and line[-1] != character_being_colored else '') + line[-1]
+            board_line_with_slides_colored += (Color.RESET.value if character_being_colored is not None and line[-1] != character_being_colored else "") + line[-1]
             line = board_line_with_slides_colored
-    if line[0] == '|':
+    if line[0] == "|":
         for pawn_label in all_pawns:  # color pawns on the border
             pawn_color = player_id_to_text_color(pawn_label[0])
             if line_y_pos in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:
                 line = line.replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() is provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
             else:
-                line = line[:line.find('|\033[0;3', 1)].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1) + line[line.find('|\033[0;3', 1):line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1] + line[line.rfind(Color.RESET.value + '|', 0, -1) + len(Color.RESET.value + '|') - 1:].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() are provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
+                line = line[: line.find("|\033[0;3", 1)].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1) + line[line.find("|\033[0;3", 1) : line.rfind(Color.RESET.value + "|", 0, -1) + len(Color.RESET.value + "|") - 1] + line[line.rfind(Color.RESET.value + "|", 0, -1) + len(Color.RESET.value + "|") - 1 :].replace(pawn_label, pawn_color + pawn_label + Color.RESET.value, 1)  # optional count parameter to replace() are provided in an attempt to speed it up as only one of each pawn label should appear on a given board line
     print(line)
     return line_num + 1
 
 
-def print_board(all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']]):
+def print_board(all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]]):
     is_which_pawns_placed = [False] * len(all_pawns)  # specifically for when a pawns' location is SpecialLocation.START.value or SpecialLocation.HOME.value
     line_num = 0
-    line_num = print_board_line(r'+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|    |>>>>|====|====|0000|    |    |    |    |>>>>|====|====|====|0000|    |    |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+---++----++---+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|    |   ||    ||  /      \                 ----                           |VVVV|', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+   ++----++ |        |              /      \+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|0000|   ||    ||  \      /              |        |    |    |    |    |    | || |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+   ++----++    ----                 \      /+====+====+====+====+====+----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'| || |   ||    ||                           ----                     ----  | || |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+   ++----++                                                  /      \+----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'| || |   ||    ||                                                 |        |0000|', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+   ++----++                                                  \      /+----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'| || |   ||    ||                                                    ----  |    |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+   ++----++                                                          +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|^^^^|   /      \                                                          |    |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+  |        |                                                         +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|    |   \      /                                                          |    |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+     ----                                                   ----     +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|    |                                                          /      \   |    |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+                                                         |        |  +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|    |                                                          \      /   |VVVV|', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+                                                          ++----++   +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|    |  ----                                                    ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+/      \                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|0000|        |                                                 ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+\      /                                                  ++----++   +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'| || |  ----                     ----                           ||    ||   | || |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+====+====+====+====+====+/      \                 ----    ++----++   +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'| || |    |    |    |    |    |        |              /      \  ||    ||   |0000|', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+====+====+====+====+====+\      /              |        | ++----++   +----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|^^^^|                           ----                 \      /  ||    ||   |    |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+----+----+----+----+----+----+----+----+----+----+----+---++----++---+----+', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'|    |    |0000|====|====|====|<<<<|    |    |    |    |0000|====|====|<<<<|    |', line_num, all_pawns, is_which_pawns_placed)
-    line_num = print_board_line(r'+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+', line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|    |>>>>|====|====|0000|    |    |    |    |>>>>|====|====|====|0000|    |    |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+---++----++---+----+----+----+----+----+----+----+----+----+----+----+----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|    |   ||    ||  /      \                 ----                           |VVVV|", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+   ++----++ |        |              /      \+====+====+====+====+====+----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|0000|   ||    ||  \      /              |        |    |    |    |    |    | || |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+   ++----++    ----                 \      /+====+====+====+====+====+----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"| || |   ||    ||                           ----                     ----  | || |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+   ++----++                                                  /      \+----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"| || |   ||    ||                                                 |        |0000|", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+   ++----++                                                  \      /+----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"| || |   ||    ||                                                    ----  |    |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+   ++----++                                                          +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|^^^^|   /      \                                                          |    |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+  |        |                                                         +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|    |   \      /                                                          |    |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+     ----                                                   ----     +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|    |                                                          /      \   |    |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+                                                         |        |  +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|    |                                                          \      /   |VVVV|", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+                                                          ++----++   +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|    |  ----                                                    ||    ||   | || |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+/      \                                                  ++----++   +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|0000|        |                                                 ||    ||   | || |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+\      /                                                  ++----++   +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"| || |  ----                     ----                           ||    ||   | || |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+====+====+====+====+====+/      \                 ----    ++----++   +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"| || |    |    |    |    |    |        |              /      \  ||    ||   |0000|", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+====+====+====+====+====+\      /              |        | ++----++   +----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|^^^^|                           ----                 \      /  ||    ||   |    |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+----+----+----+----+----+----+----+----+----+----+----+---++----++---+----+", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"|    |    |0000|====|====|====|<<<<|    |    |    |    |0000|====|====|<<<<|    |", line_num, all_pawns, is_which_pawns_placed)
+    line_num = print_board_line(r"+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+", line_num, all_pawns, is_which_pawns_placed)
 
 
-def print_current_game_board(all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']]):  # takes as input a dictionary mapping pawn labels to their present location
+def print_current_game_board(all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]]):  # takes as input a dictionary mapping pawn labels to their present location
     print("State of the game board:")
     print_board(all_pawns)
     print()
@@ -339,10 +337,10 @@ def get_teammate_letter(player_name: str):  # returns an empty string on error
         return Color.YELLOW.name[0]
     elif player_name[0] == Color.YELLOW.name[0]:
         return Color.RED.name[0]
-    return ''
+    return ""
 
 
-def bump_pawns_at_coordinates(all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], coordinates: List[Dict[Coordinate, int]]):  # moves all pawns in all_pawns that are currently located at coordinates found in the coordinates list parameter (consisting of dictionaries of ordered (x, y) pairs) to their SpecialLocation.START.value location
+def bump_pawns_at_coordinates(all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], coordinates: List[Dict[Coordinate, int]]):  # moves all pawns in all_pawns that are currently located at coordinates found in the coordinates list parameter (consisting of dictionaries of ordered (x, y) pairs) to their SpecialLocation.START.value location
     num_bumped_pawns = 0
     for pawn_label in all_pawns:
         if all_pawns[pawn_label] in coordinates:
@@ -380,8 +378,8 @@ def binary_search(value_to_find: Any, array_to_search: NestedList, access_array:
     return current_index if min_index != max_index else None
 
 
-def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], name_of_player_making_move: str | None = None):  # takes the number of spaces to move the pawn of label label_of_pawn_to_move and an adjusted dictionary of all the pawns (having moved bumped pawns back to their SpecialLocation.START.value); returns (if name_of_player_making_move is provided) whether the movement was valid
-    is_movement_forward = (num_spaces > 0)
+def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], name_of_player_making_move: str | None = None):  # takes the number of spaces to move the pawn of label label_of_pawn_to_move and an adjusted dictionary of all the pawns (having moved bumped pawns back to their SpecialLocation.START.value); returns (if name_of_player_making_move is provided) whether the movement was valid
+    is_movement_forward = num_spaces > 0
     while num_spaces != 0:
         if all_pawns[label_of_pawn_to_move] == SpecialLocation.HOME.value:
             if name_of_player_making_move is not None:
@@ -399,40 +397,40 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: Dict[str, 
             break  # no further movement is allowed if the pawn is moved from its start location
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if in a safe zone
             if label_of_pawn_to_move[0] == Color.BLUE.name[0]:
-                all_pawns[label_of_pawn_to_move][Coordinate.Y] += (-1 if is_movement_forward else 1)
+                all_pawns[label_of_pawn_to_move][Coordinate.Y] += -1 if is_movement_forward else 1
             elif label_of_pawn_to_move[0] == Color.GREEN.name[0]:
-                all_pawns[label_of_pawn_to_move][Coordinate.Y] += (1 if is_movement_forward else -1)
+                all_pawns[label_of_pawn_to_move][Coordinate.Y] += 1 if is_movement_forward else -1
             elif label_of_pawn_to_move[0] == Color.RED.name[0]:
-                all_pawns[label_of_pawn_to_move][Coordinate.X] += (-1 if is_movement_forward else 1)
+                all_pawns[label_of_pawn_to_move][Coordinate.X] += -1 if is_movement_forward else 1
             elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:  # check is redundant
-                all_pawns[label_of_pawn_to_move][Coordinate.X] += (1 if is_movement_forward else -1)
+                all_pawns[label_of_pawn_to_move][Coordinate.X] += 1 if is_movement_forward else -1
             if all_pawns[label_of_pawn_to_move] in Location.HOME_COORDINATES.value:  # if at a SpecialLocation.HOME.value location
                 all_pawns[label_of_pawn_to_move] = SpecialLocation.HOME.value
         elif all_pawns[label_of_pawn_to_move] == Location.BLUE_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.BLUE.name[0]:
-            all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += (-1 if is_movement_forward else 1)
+            all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += -1 if is_movement_forward else 1
         elif all_pawns[label_of_pawn_to_move] == Location.GREEN_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.GREEN.name[0]:
-            all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += (1 if is_movement_forward else -1)
+            all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += 1 if is_movement_forward else -1
         elif all_pawns[label_of_pawn_to_move] == Location.RED_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.RED.name[0]:
-            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += (-1 if is_movement_forward else 1)
+            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += -1 if is_movement_forward else 1
         elif all_pawns[label_of_pawn_to_move] == Location.YELLOW_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
-            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += (1 if is_movement_forward else -1)
+            all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += 1 if is_movement_forward else -1
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] == Coordinate.MIN_Y.value:  # if pawn is on top edge of board
-            all_pawns[label_of_pawn_to_move][Coordinate.X] += (1 if is_movement_forward else -1)
+            all_pawns[label_of_pawn_to_move][Coordinate.X] += 1 if is_movement_forward else -1
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] == Coordinate.MAX_Y.value:  # if pawn is on bottom edge of board
-            all_pawns[label_of_pawn_to_move][Coordinate.X] -= (1 if is_movement_forward else -1)
+            all_pawns[label_of_pawn_to_move][Coordinate.X] -= 1 if is_movement_forward else -1
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] == Coordinate.MIN_X.value and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if pawn is on left edge of board
-            all_pawns[label_of_pawn_to_move][Coordinate.Y] -= (1 if is_movement_forward else -1)
+            all_pawns[label_of_pawn_to_move][Coordinate.Y] -= 1 if is_movement_forward else -1
         elif all_pawns[label_of_pawn_to_move][Coordinate.X] == Coordinate.MAX_X.value and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if pawn is on right edge of board
-            all_pawns[label_of_pawn_to_move][Coordinate.Y] += (1 if is_movement_forward else -1)
+            all_pawns[label_of_pawn_to_move][Coordinate.Y] += 1 if is_movement_forward else -1
         elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 0, Coordinate.Y: 0}:  # if pawn is in the top left square
             all_pawns[label_of_pawn_to_move][(Coordinate.X if is_movement_forward else Coordinate.Y)] += 1
         elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 15, Coordinate.Y: 0}:  # if pawn is in the top right square
-            all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += (1 if is_movement_forward else -1)
+            all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += 1 if is_movement_forward else -1
         elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 0, Coordinate.Y: 15}:  # if pawn is in the bottom left square
-            all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += (-1 if is_movement_forward else 1)
+            all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += -1 if is_movement_forward else 1
         elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 15, Coordinate.Y: 15}:  # if pawn is in the bottom right square; check is redundant
             all_pawns[label_of_pawn_to_move][(Coordinate.X if is_movement_forward else Coordinate.Y)] -= 1
-        num_spaces += (-1 if is_movement_forward else 1)
+        num_spaces += -1 if is_movement_forward else 1
     if all_pawns[label_of_pawn_to_move] not in [SpecialLocation.START.value, SpecialLocation.HOME.value] and ((label_of_pawn_to_move[0] == Color.BLUE.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.Y] != Coordinate.MAX_Y.value) or (label_of_pawn_to_move[0] == Color.GREEN.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.Y] != Coordinate.MIN_Y.value) or (label_of_pawn_to_move[0] == Color.RED.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.X] != Coordinate.MAX_X.value) or (label_of_pawn_to_move[0] == Color.YELLOW.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.X] != Coordinate.MIN_X.value)):  # if not on line corresponding to pawn's color
         if all_pawns[label_of_pawn_to_move] in Location.SLIDE_ENTRANCES.value:  # if at the start of a slide
             this_slide_location = all_pawns[label_of_pawn_to_move][Coordinate.X] + all_pawns[label_of_pawn_to_move][Coordinate.Y]  # summing the x and y coordinates gives a unique sum for each slide, and hence is used to determine which slide is being ridden
@@ -450,7 +448,7 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: Dict[str, 
     is_bump_valid = True
     if all_pawns[label_of_pawn_to_move] != SpecialLocation.HOME.value:
         saved_pawn_location = all_pawns[label_of_pawn_to_move]  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
-        pawns_that_must_not_be_landed_on: Dict[str, Dict[Coordinate, int] | Literal['h', 's']] = {}  # pawns are forbidden from landing on pawns belonging to the player making the play
+        pawns_that_must_not_be_landed_on: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]] = {}  # pawns are forbidden from landing on pawns belonging to the player making the play
         if name_of_player_making_move is not None:
             for pawn_label in all_pawns:
                 if pawn_label[0] == name_of_player_making_move[0] and pawn_label != label_of_pawn_to_move:
@@ -465,20 +463,20 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: Dict[str, 
         return is_bump_valid
 
 
-def is_valid_target(pawn_targets: Dict[str, int] | List[str], card_value: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_card_a_ten_as_backward_one: bool) -> bool:  # returns whether the given pawn collection can be targeted by the card in question (and given the card in question's function in the instance of a seven or ten - can_sevens_be_split_across_more_than_two_pawns is a boolean that is only used if the card is a seven and and is_card_a_ten_as_backward_one can be True, False, or None), knowing whose turn it is, the state of the board, whether there are teams, and all selected pawn targets of the card
-    if 'd' in pawn_targets:  # the discarding action is presumed to already have been verified to be valid
+def is_valid_target(pawn_targets: Dict[str, int] | List[str], card_value: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], are_teams: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_card_a_ten_as_backward_one: bool) -> bool:  # returns whether the given pawn collection can be targeted by the card in question (and given the card in question's function in the instance of a seven or ten - can_sevens_be_split_across_more_than_two_pawns is a boolean that is only used if the card is a seven and and is_card_a_ten_as_backward_one can be True, False, or None), knowing whose turn it is, the state of the board, whether there are teams, and all selected pawn targets of the card
+    if "d" in pawn_targets:  # the discarding action is presumed to already have been verified to be valid
         return len(pawn_targets) == 1
-    if card_value in ['1', '2', '3', '5', '8', '10', '12'] or (card_value == '11' and len(pawn_targets) == 1):
+    if card_value in ["1", "2", "3", "5", "8", "10", "12"] or (card_value == "11" and len(pawn_targets) == 1):
         if len(pawn_targets) == 1:
-            if (pawn_targets[0][0] == name_of_player_to_play[0] or (are_teams and pawn_targets[0][0] == get_teammate_letter(name_of_player_to_play[0]))) and all_pawns[pawn_targets[0]] != SpecialLocation.HOME.value and (all_pawns[pawn_targets[0]] != SpecialLocation.START.value or card_value in ['1', '2']):
-                return move_pawn((int(card_value) if card_value != '10' or not is_card_a_ten_as_backward_one else -1), pawn_targets[0], copy.deepcopy(all_pawns), name_of_player_to_play)  # modified all_pawns parameter gets ignored
+            if (pawn_targets[0][0] == name_of_player_to_play[0] or (are_teams and pawn_targets[0][0] == get_teammate_letter(name_of_player_to_play[0]))) and all_pawns[pawn_targets[0]] != SpecialLocation.HOME.value and (all_pawns[pawn_targets[0]] != SpecialLocation.START.value or card_value in ["1", "2"]):
+                return move_pawn((int(card_value) if card_value != "10" or not is_card_a_ten_as_backward_one else -1), pawn_targets[0], copy.deepcopy(all_pawns), name_of_player_to_play)  # modified all_pawns parameter gets ignored
         # elif not pawn_targets and card_value == '2':  # is_valid_target() doesn't check for the card being a two with no movements
         #     return True  # is_valid_target() doesn't check for the card being a two with no movements
-    elif card_value == '4':
+    elif card_value == "4":
         if len(pawn_targets) == 1:
             if (pawn_targets[0][0] == name_of_player_to_play[0] or (are_teams and pawn_targets[0][0] == get_teammate_letter(name_of_player_to_play[0]))) and all_pawns[pawn_targets[0]] not in [SpecialLocation.HOME.value, SpecialLocation.START.value]:
                 return move_pawn(-4, pawn_targets[0], copy.deepcopy(all_pawns), name_of_player_to_play)  # modified all_pawns parameter gets ignored
-    elif card_value == '7':
+    elif card_value == "7":
         if can_sevens_be_split_across_more_than_two_pawns or len(pawn_targets) <= 2:
             movement_sum = 0
             seen_pawn_labels: List[str] = []  # keeps track of which pawn labels have been seen and hence repeated
@@ -495,10 +493,10 @@ def is_valid_target(pawn_targets: Dict[str, int] | List[str], card_value: str, n
                     return False
                 movement_sum += pawn_targets[pawn_label]
             return movement_sum == 7
-    elif card_value == '11':  # already determined that len(pawn_targets) != 1
+    elif card_value == "11":  # already determined that len(pawn_targets) != 1
         if len(pawn_targets) == 2 and all_pawns[pawn_targets[0]] not in [SpecialLocation.START.value, SpecialLocation.HOME.value] and (all_pawns[pawn_targets[0]][Coordinate.X] in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] or all_pawns[pawn_targets[0]][Coordinate.Y] in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]) and all_pawns[pawn_targets[1]] not in [SpecialLocation.START.value, SpecialLocation.HOME.value] and (all_pawns[pawn_targets[1]][Coordinate.X] in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] or all_pawns[pawn_targets[1]][Coordinate.Y] in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]):
             return pawn_targets[0][0] != pawn_targets[1][0] and ((pawn_targets[0][0] != name_of_player_to_play[0] and (pawn_targets[1][0] == name_of_player_to_play[0] or (are_teams and pawn_targets[1][0] == get_teammate_letter(name_of_player_to_play[0])))) or (pawn_targets[1][0] != name_of_player_to_play[0] and (pawn_targets[0][0] == name_of_player_to_play[0] or (are_teams and pawn_targets[0][0] == get_teammate_letter(name_of_player_to_play[0])))))  # if one pawn target belongs to the current player's side and the other doesn't belong to the current player
-    elif card_value == 'Sorry':
+    elif card_value == "Sorry":
         if len(pawn_targets) == 2:
             if pawn_targets[0][0] != pawn_targets[1][0]:
                 if pawn_targets[0][0] != name_of_player_to_play[0] and (pawn_targets[1][0] == name_of_player_to_play[0] or (are_teams and pawn_targets[1][0] == get_teammate_letter(name_of_player_to_play[0]))):  # if one pawn target belongs to the current player's side and the other doesn't belong to the current player
@@ -508,8 +506,8 @@ def is_valid_target(pawn_targets: Dict[str, int] | List[str], card_value: str, n
     return False
 
 
-def is_any_valid_split_for_seven(pawn_targets: Dict[str, int], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, seven_remaining_distance: int, can_sevens_be_split_across_more_than_two_pawns: bool):  # card value is assumed to be '7'
-    if is_valid_target(pawn_targets, '7', name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, False):  # if valid as is (particularly used during recursion)
+def is_any_valid_split_for_seven(pawn_targets: Dict[str, int], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], are_teams: bool, seven_remaining_distance: int, can_sevens_be_split_across_more_than_two_pawns: bool):  # card value is assumed to be '7'
+    if is_valid_target(pawn_targets, "7", name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, False):  # if valid as is (particularly used during recursion)
         return True
     for pawn_label in all_pawns:
         if (pawn_label[0] == name_of_player_to_play[0] or (are_teams and pawn_label[0] == get_teammate_letter(name_of_player_to_play[0]))) and not any(pawn_label in pawn_target for pawn_target in pawn_targets):
@@ -522,42 +520,42 @@ def is_any_valid_split_for_seven(pawn_targets: Dict[str, int], name_of_player_to
     return False
 
 
-def is_any_valid_move_for_ten(pawn_targets: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
-    return is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, True) or is_valid_target(pawn_targets, '10', name_of_player_to_play, all_pawns, are_teams, None, False)
+def is_any_valid_move_for_ten(pawn_targets: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], are_teams: bool):
+    return is_valid_target(pawn_targets, "10", name_of_player_to_play, all_pawns, are_teams, None, True) or is_valid_target(pawn_targets, "10", name_of_player_to_play, all_pawns, are_teams, None, False)
 
 
-def is_any_valid_swap_for_eleven(existing_pawn_target: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
+def is_any_valid_swap_for_eleven(existing_pawn_target: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], are_teams: bool):
     for pawn_label in all_pawns:
-        if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], '11', name_of_player_to_play, all_pawns, are_teams, None, False):
+        if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], "11", name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
     return False
 
 
-def is_any_valid_play_for_sorry(existing_pawn_target: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool):
+def is_any_valid_play_for_sorry(existing_pawn_target: str, name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], are_teams: bool):
     for pawn_label in all_pawns:
-        if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], 'Sorry', name_of_player_to_play, all_pawns, are_teams, None, False):
+        if pawn_label != existing_pawn_target and is_valid_target([existing_pawn_target, pawn_label], "Sorry", name_of_player_to_play, all_pawns, are_teams, None, False):
             return True
     return False
 
 
-def add_play_score_attribute(play: Play, hand_of_cards: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, do_return_whether_is_any: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str]):  # adds a play_score attribute with a corresponding score to the play dictionary parameter according to the estimated value of executing the play using the rest of the parameters
+def add_play_score_attribute(play: Play, hand_of_cards: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], are_teams: bool, do_return_whether_is_any: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str]):  # adds a play_score attribute with a corresponding score to the play dictionary parameter according to the estimated value of executing the play using the rest of the parameters
     play.play_score = random.randrange(100)  # primitive (random) solution  # TODO: better scoring heuristics
 
 
-def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], are_teams: bool, do_return_whether_is_any: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str] | None = None):  # hand_of_cards is required as valid moves (e.g. discarding is only allowed when the only other valid play is playing an eleven as a swap) depend on other whether other cards have moves; do_return_whether_is_any is a boolean representing whether (if True) to return whether there is at least one valid play instead of returning an array of the enumerated valid plays; the presence of discard_pile parameter indicates to score each possible play (for a computer-controlled player)
+def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: str, all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], are_teams: bool, do_return_whether_is_any: bool, can_sevens_be_split_across_more_than_two_pawns: bool, is_immediate_draw_after_playing_a_2: bool, is_card_after_playing_a_2_force_played: bool, discard_pile: List[str] | None = None):  # hand_of_cards is required as valid moves (e.g. discarding is only allowed when the only other valid play is playing an eleven as a swap) depend on other whether other cards have moves; do_return_whether_is_any is a boolean representing whether (if True) to return whether there is at least one valid play instead of returning an array of the enumerated valid plays; the presence of discard_pile parameter indicates to score each possible play (for a computer-controlled player)
     possible_plays: List[Play] = []  # a list containing dictionaries of the (first) card to play (card_to_play), a list of any and all pawn targets (pawn_targets) called for by the play, (if discard_pile is not None and not do_return_whether_is_any) a score (play_score) of the play, and (if the card to play is a ten) a boolean (is_card_a_ten_as_backward_one) specifying to use the ten to move a/the pawn backwards by one
     for card in hand_of_cards:
-        if card in ['1', '2', '3', '4', '5', '8', '11', '12']:
+        if card in ["1", "2", "3", "4", "5", "8", "11", "12"]:
             for pawn_label in all_pawns:
                 if is_valid_target([pawn_label], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):
                     if do_return_whether_is_any:
                         return True
                     possible_plays.append(Play(card, [pawn_label]))
                     add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
-            if card == '2':
+            if card == "2":
                 can_2_validly_move_any_pawn = False
                 for possible_play in reversed(possible_plays):  # reversed possible_plays to improve time complexity as really only the last/latest element of possible_plays should be checked for Play.card_to_play equaling '2'
-                    if possible_play.card_to_play == '2':
+                    if possible_play.card_to_play == "2":
                         can_2_validly_move_any_pawn = True
                         break
                 if not can_2_validly_move_any_pawn and (not is_immediate_draw_after_playing_a_2 or len(hand_of_cards) > 1):  # notably, having a '2' in hand leads to always having a viable play, unless playing a '2' requires a follow-up card to be played (as is expected), but the player won't have any card to possibly follow-up with
@@ -565,7 +563,7 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                         return True
                     possible_plays.append(Play(card, []))  # playing a 2 purely as a draw (without moving a pawn and hence an empty pawn_targets array) is a valid play if and only if the 2 cannot validly move a pawn
                     add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
-            elif card == '11':
+            elif card == "11":
                 for pawn_label_1 in all_pawns:
                     for pawn_label_2 in all_pawns:
                         if is_valid_target([pawn_label_1, pawn_label_2], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):
@@ -573,7 +571,7 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                                 return True
                             possible_plays.append(Play(card, [pawn_label_1, pawn_label_2]))
                             add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
-        elif card == '7':
+        elif card == "7":
             if can_sevens_be_split_across_more_than_two_pawns:
                 pawn_indices = [0] * int(card)  # the indices of the pawns in movable_pawns to assign each movement distance to (for a total distance of seven)
                 movable_pawns: List[str] = []
@@ -615,7 +613,7 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                                 possible_plays.pop()
                             else:
                                 add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
-        elif card == '10':
+        elif card == "10":
             for pawn_label in all_pawns:
                 if is_valid_target([pawn_label], card, name_of_player_to_play, all_pawns, are_teams, None, True):
                     if do_return_whether_is_any:
@@ -627,7 +625,7 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                         return True
                     possible_plays.append(Play(card, [pawn_label], False))
                     add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
-        elif card == 'Sorry':
+        elif card == "Sorry":
             for pawn_label_1 in all_pawns:
                 for pawn_label_2 in all_pawns:
                     if is_valid_target([pawn_label_1, pawn_label_2], card, name_of_player_to_play, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, None):
@@ -637,24 +635,24 @@ def enumerate_possible_plays(hand_of_cards: List[str], name_of_player_to_play: s
                         add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
     is_only_valid_plays_eleven_as_swap = True
     for possible_play in possible_plays:
-        if possible_play.card_to_play != '11' or len(possible_play.pawn_targets) != 2:
+        if possible_play.card_to_play != "11" or len(possible_play.pawn_targets) != 2:
             is_only_valid_plays_eleven_as_swap = False
             break
     if do_return_whether_is_any:
         return possible_plays and not is_only_valid_plays_eleven_as_swap  # do_return_whether_is_any leads to returning False if only playable move is an eleven as swap since that is the only valid move that is permitted to be ignored and enumerate_possible_plays() with the do_return_whether_is_any is used to determine if discarding is allowed
     if not possible_plays or is_only_valid_plays_eleven_as_swap:  # discarding is only an option if there are no valid plays other than possibly using an eleven as a swap
         for card in hand_of_cards:
-            possible_plays.append(Play(card, ['d']))
+            possible_plays.append(Play(card, ["d"]))
             add_play_score_attribute(possible_plays[-1], hand_of_cards, name_of_player_to_play, all_pawns, are_teams, do_return_whether_is_any, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played, discard_pile)
     return possible_plays
 
 
-def determine_default_action(card_value: str, other_chosen_pawn_targets: Dict[str, int] | List[str], all_possible_plays: List[Play], all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], name_of_player_making_play: str, are_teams: bool) -> tuple[Dict[str, int] | List[str] | None, str]:  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
+def determine_default_action(card_value: str, other_chosen_pawn_targets: Dict[str, int] | List[str], all_possible_plays: List[Play], all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], name_of_player_making_play: str, are_teams: bool) -> tuple[Dict[str, int] | List[str] | None, str]:  # takes the already selected pawn targets (if existent), card, available/possible plays, the positions of every pawn (used if the card is a '1', '2', or 'Sorry' to determine which (if any) pawn would be moved from SpecialLocation.START.value and which (if any) pawn would be moved to SpecialLocation.START.value in generating the string explaining the default action), the name of the player making the play (used if the card is an '11' to determine if the first targeted pawn belongs to the player making the play (where hence the default action should be to move that pawn forward) or not (where hence the default action should be to swap with a friendly pawn if there is only one friendly pawn available to swap with)), and whether there are teams; (if only one valid pawn choice (including no pawns) exists for the given card to play and any pawn(s) selected) returns the remaining pawn target(s) of that choice, 'd' for discard, or None otherwise, and also returns a string to show the user to explain the default choice in more detail; requires card and pawn choices to be at least a part of some valid/possible play
     num_possible_plays_with_selections = 0
     default_action: Dict[str, int] | List[str] = []  # return no additional pawn targets if default choice is to use the '11' as a forward movement of a single pawn
     is_card_a_ten_as_backward_one = False
-    if card_value != '11' or not other_chosen_pawn_targets or (other_chosen_pawn_targets[0][0] != name_of_player_making_play[0] and (not are_teams or other_chosen_pawn_targets[0][0] != get_teammate_letter(name_of_player_making_play[0]))):  # otherwise default action is to be playing the '11' as is (moving one pawn forward eleven spaces)
-        if card_value != '7' and (card_value not in ['11', 'Sorry'] or other_chosen_pawn_targets):  # if order of pawn targets doesn't matter and card is not a 'Sorry' nor '11' with no pawn targets chosen yet
+    if card_value != "11" or not other_chosen_pawn_targets or (other_chosen_pawn_targets[0][0] != name_of_player_making_play[0] and (not are_teams or other_chosen_pawn_targets[0][0] != get_teammate_letter(name_of_player_making_play[0]))):  # otherwise default action is to be playing the '11' as is (moving one pawn forward eleven spaces)
+        if card_value != "7" and (card_value not in ["11", "Sorry"] or other_chosen_pawn_targets):  # if order of pawn targets doesn't matter and card is not a 'Sorry' nor '11' with no pawn targets chosen yet
             for possible_play in all_possible_plays:
                 if possible_play.card_to_play == card_value:
                     is_this_possible_play_an_option = True
@@ -669,19 +667,19 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets: Dict[st
                                 if pawn_target not in other_chosen_pawn_targets and pawn_target not in default_action:
                                     is_play_equivalent = False
                             if is_play_equivalent:
-                                if card_value == '10' and default_action and is_card_a_ten_as_backward_one != possible_play.is_card_a_ten_as_backward_one:
+                                if card_value == "10" and default_action and is_card_a_ten_as_backward_one != possible_play.is_card_a_ten_as_backward_one:
                                     is_card_a_ten_as_backward_one = False
                                 is_this_possible_play_an_option = False  # equivalent plays are disregarded
                     if is_this_possible_play_an_option:
                         num_possible_plays_with_selections += 1
                         if num_possible_plays_with_selections != 1:  # if there are multiple possible plays knowing the chosen card and existing pawn choices
                             return None, ""
-                        if card_value == '10':
+                        if card_value == "10":
                             is_card_a_ten_as_backward_one = possible_play.is_card_a_ten_as_backward_one
                         default_action = copy.deepcopy(possible_play.pawn_targets)
                         for pawn_target in other_chosen_pawn_targets:
                             default_action.remove(pawn_target)  # remove existing pawn targets from pawn targets to add
-        elif card_value in ['11', 'Sorry']:  # '11's and 'Sorry's (with no chosen pawn targets yet) are handled separately as a default first pawn choice may present itself (if there is only one friendly pawn in home or only one opponent pawn that could be bumped)
+        elif card_value in ["11", "Sorry"]:  # '11's and 'Sorry's (with no chosen pawn targets yet) are handled separately as a default first pawn choice may present itself (if there is only one friendly pawn in home or only one opponent pawn that could be bumped)
             for possible_play in all_possible_plays:
                 if possible_play.card_to_play == card_value:
                     num_possible_plays_with_selections += 1
@@ -713,11 +711,11 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets: Dict[st
                         num_possible_plays_with_selections += 1
                         if num_possible_plays_with_selections != 1:  # if there are multiple possible plays knowing the chosen card and existing pawn choices
                             return None, ""
-                        default_action = (dict(list(possible_play.pawn_targets.items())[len(other_chosen_pawn_targets):]) if isinstance(possible_play.pawn_targets, dict) else possible_play.pawn_targets[len(other_chosen_pawn_targets):])  # possible_play.pawn_targets may be a list even for a '7' if it regards discarding; default_action may be a list even for a '7' if it regards discarding
-        if 'd' in default_action:
+                        default_action = dict(list(possible_play.pawn_targets.items())[len(other_chosen_pawn_targets) :]) if isinstance(possible_play.pawn_targets, dict) else possible_play.pawn_targets[len(other_chosen_pawn_targets) :]  # possible_play.pawn_targets may be a list even for a '7' if it regards discarding; default_action may be a list even for a '7' if it regards discarding
+        if "d" in default_action:
             return default_action, f"discarding this {card_value}"
     explanation_string = ""
-    if card_value != '10' and (card_value != '11' or len(other_chosen_pawn_targets) + len(default_action) == 1) and card_value != 'Sorry':
+    if card_value != "10" and (card_value != "11" or len(other_chosen_pawn_targets) + len(default_action) == 1) and card_value != "Sorry":
         if default_action:
             for i in range(len(default_action)):
                 explanation_string += f"moving pawn {default_action[i] if not isinstance(default_action, dict) else list(default_action.keys())[i]} "
@@ -726,15 +724,15 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets: Dict[st
                 else:
                     explanation_string += f"{'for' if card_value != '4' and (card_value != '10' or not is_card_a_ten_as_backward_one) else 'back'}ward by {(int(card_value) if not is_card_a_ten_as_backward_one else 1) if not isinstance(default_action, dict) else list(default_action.values())[i]}{' then ' if i != len(default_action) - 1 else ''}"
         else:
-            if card_value == '11':  # also len(other_chosen_pawn_targets) == 1 since it was confirmed the sum of len(other_chosen_pawn_targets) and len(default_action) was 1 but len(default_action) == 0
+            if card_value == "11":  # also len(other_chosen_pawn_targets) == 1 since it was confirmed the sum of len(other_chosen_pawn_targets) and len(default_action) was 1 but len(default_action) == 0
                 explanation_string += f"moving pawn {other_chosen_pawn_targets[0]} forward by {card_value}"
             # elif card_value == '2':  # also len(other_chosen_pawn_targets) == 0 as a '2' is the only card that could end up with no default action pawn picks while being given the option to pick more pawn targets  # deprecated for the user specifying to use the '2' only to draw being handled elsewhere
             #     explanation_string = "drawing a card without moving any pawn"  # deprecated for the user specifying to use the '2' only to draw being handled elsewhere
-    elif card_value == '10':
+    elif card_value == "10":
         explanation_string += f"moving pawn {default_action[0]} {'for' if not is_card_a_ten_as_backward_one else 'back'}ward by {int(card_value) if not is_card_a_ten_as_backward_one else 1}"
-    elif card_value == '11':
+    elif card_value == "11":
         explanation_string = f"swapping the locations of pawns {default_action[0] if len(default_action) == 2 else other_chosen_pawn_targets[0]} and {default_action[-1]}"
-    elif card_value == 'Sorry':  # check is redundant
+    elif card_value == "Sorry":  # check is redundant
         pawn_in_start: None | str = None  # the label of the pawn determined to be at its start location (according the play to be valid)
         pawn_to_move_to_start: None | str = None  # the label of the pawn determined to not be at its start location (knowing the play to be valid)
         if other_chosen_pawn_targets:
@@ -763,8 +761,8 @@ def determine_default_action(card_value: str, other_chosen_pawn_targets: Dict[st
     return default_action, explanation_string
 
 
-def play_card(card_to_play: str, pawn_targets: Dict[str, int] | List[str], all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']], is_card_a_ten_as_backward_one=False):  # takes the card to play, a list of all the (labels of the) pawns to target (alternatively a dictionary of all the labels of the pawns to target mapped to how much to move each for the card 7), a to-be-adjusted dictionary of all the existing pawns, and (optionally) a flag indicating to treat the card (which must be a ten, but is not verified) as a movement backward by one; behavior is undefined if the play is invalid (see is_valid_target()) including if excessive or not enough pawn targets are provided
-    if card_to_play in ['1', '2'] and all_pawns[pawn_targets[0]] == SpecialLocation.START.value:
+def play_card(card_to_play: str, pawn_targets: Dict[str, int] | List[str], all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]], is_card_a_ten_as_backward_one=False):  # takes the card to play, a list of all the (labels of the) pawns to target (alternatively a dictionary of all the labels of the pawns to target mapped to how much to move each for the card 7), a to-be-adjusted dictionary of all the existing pawns, and (optionally) a flag indicating to treat the card (which must be a ten, but is not verified) as a movement backward by one; behavior is undefined if the play is invalid (see is_valid_target()) including if excessive or not enough pawn targets are provided
+    if card_to_play in ["1", "2"] and all_pawns[pawn_targets[0]] == SpecialLocation.START.value:
         if pawn_targets[0][0] == Color.BLUE.name[0]:
             bump_pawns_at_coordinates(all_pawns, [Location.BLUE_START_EXIT.value])
             all_pawns[pawn_targets[0]] = Location.BLUE_START_EXIT.value.copy()
@@ -777,23 +775,23 @@ def play_card(card_to_play: str, pawn_targets: Dict[str, int] | List[str], all_p
         elif pawn_targets[0][0] == Color.YELLOW.name[0]:
             bump_pawns_at_coordinates(all_pawns, [Location.YELLOW_START_EXIT.value])
             all_pawns[pawn_targets[0]] = Location.YELLOW_START_EXIT.value.copy()
-    elif card_to_play == '7':
+    elif card_to_play == "7":
         for pawn_label in pawn_targets:
             move_pawn(pawn_targets[pawn_label], pawn_label, all_pawns)
-    elif card_to_play == 'Sorry' or (card_to_play == '11' and len(pawn_targets) == 2):
+    elif card_to_play == "Sorry" or (card_to_play == "11" and len(pawn_targets) == 2):
         all_pawns[pawn_targets[0]], all_pawns[pawn_targets[1]] = all_pawns[pawn_targets[1]], all_pawns[pawn_targets[0]]
         if all_pawns[pawn_targets[0]] != SpecialLocation.START.value:
             move_pawn(0, pawn_targets[0], all_pawns)  # simulate a movement of zero to adjust in case an arrow was landed on
         if all_pawns[pawn_targets[1]] != SpecialLocation.START.value:
             move_pawn(0, pawn_targets[1], all_pawns)  # simulate a movement of zero to adjust in case an arrow was landed on
-    elif card_to_play == '4' or is_card_a_ten_as_backward_one:
+    elif card_to_play == "4" or is_card_a_ten_as_backward_one:
         move_pawn((-4 if not is_card_a_ten_as_backward_one else -1), pawn_targets[0], all_pawns)
-    elif card_to_play in ['1', '2', '3', '5', '8', '10', '11', '12']:
+    elif card_to_play in ["1", "2", "3", "5", "8", "10", "11", "12"]:
         move_pawn(int(card_to_play), pawn_targets[0], all_pawns)
 
 
 def get_player_type(player_color: Color, default_enum: PlayerType):  # takes the player's color and an enum mapping the word to show to indicate the default option to the value to assign if the default option is chosen; returns the selected PlayerType
-    player_type: Literal['c', 'h', 'n'] | None = None
+    player_type: Literal["c", "h", "n"] | None = None
     while player_type is None or (player_type and player_type not in [PlayerType.COMPUTER.value, PlayerType.HUMAN.value, PlayerType.NONEXISTENT.value]):
         player_type = input(f"Is {player_color.value}{player_color.name.lower()}{Color.RESET.value} a {PlayerType.COMPUTER.name.lower()} ({PlayerType.COMPUTER.value}), {PlayerType.HUMAN.name.lower()} ({PlayerType.HUMAN.value}), or {PlayerType.NONEXISTENT.name.lower()} ({PlayerType.NONEXISTENT.value})? [default: {default_enum.name.lower()}] ")
     if player_type == PlayerType.COMPUTER.value:
@@ -807,8 +805,8 @@ def get_player_type(player_color: Color, default_enum: PlayerType):  # takes the
 
 
 def get_user_confirmation(message: str):  # returns True on confirmation and False on denial
-    valid_confirmation_strings = ['y', 'yes']   # the first element is shown in the prompt
-    valid_denial_strings = ['n', 'no']   # the first element is shown in the prompt
+    valid_confirmation_strings = ["y", "yes"]  # the first element is shown in the prompt
+    valid_denial_strings = ["n", "no"]  # the first element is shown in the prompt
     input_string: str | None = None
     while input_string not in valid_confirmation_strings and input_string not in valid_denial_strings:
         input_string = input(f"{message} [{valid_confirmation_strings[0]}/{valid_denial_strings[0]}] ").strip().lower()
@@ -820,15 +818,15 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
 
     num_players = 0
     blue_player_type = get_player_type(Color.BLUE, PlayerType.HUMAN)
-    num_players += (blue_player_type != PlayerType.NONEXISTENT)
+    num_players += blue_player_type != PlayerType.NONEXISTENT
     green_player_type = get_player_type(Color.GREEN, PlayerType.COMPUTER)
-    num_players += (green_player_type != PlayerType.NONEXISTENT)
+    num_players += green_player_type != PlayerType.NONEXISTENT
     red_player_type = get_player_type(Color.RED, PlayerType.NONEXISTENT)
-    num_players += (red_player_type != PlayerType.NONEXISTENT)
+    num_players += red_player_type != PlayerType.NONEXISTENT
     yellow_player_type = get_player_type(Color.YELLOW, PlayerType.NONEXISTENT)
-    num_players += (yellow_player_type != PlayerType.NONEXISTENT)
+    num_players += yellow_player_type != PlayerType.NONEXISTENT
     print()
-    
+
     if num_players == 0:
         return 0
 
@@ -839,7 +837,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
         if are_teams:
             can_sevens_be_split_across_more_than_two_pawns = get_user_confirmation("Can sevens be split across more than two pawns?")
 
-    draw_pile = ['1'] * 5 + ['2'] * 4 + ['3'] * 4 + ['4'] * 4 + ['5'] * 4 + ['7'] * 4 + ['8'] * 4 + ['10'] * 4 + ['11'] * 4 + ['12'] * 4 + ['Sorry'] * 4
+    draw_pile = ["1"] * 5 + ["2"] * 4 + ["3"] * 4 + ["4"] * 4 + ["5"] * 4 + ["7"] * 4 + ["8"] * 4 + ["10"] * 4 + ["11"] * 4 + ["12"] * 4 + ["Sorry"] * 4
     hand_size: int | str | None = None
     while hand_size is None or not isinstance(hand_size, int) or hand_size < 0 or hand_size > len(draw_pile) / num_players:
         hand_size = input("Hand size: [default: 5] ")
@@ -863,13 +861,13 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
     if get_user_confirmation("Faster play (each player begins the game with one pawn out of start)?"):
         for player in players:
             if player.color == Color.BLUE:
-                player.pawns[player.id + '1'] = Location.BLUE_START_EXIT.value.copy()
+                player.pawns[player.id + "1"] = Location.BLUE_START_EXIT.value.copy()
             elif player.color == Color.GREEN:
-                player.pawns[player.id + '1'] = Location.GREEN_START_EXIT.value.copy()
+                player.pawns[player.id + "1"] = Location.GREEN_START_EXIT.value.copy()
             elif player.color == Color.RED:
-                player.pawns[player.id + '1'] = Location.RED_START_EXIT.value.copy()
+                player.pawns[player.id + "1"] = Location.RED_START_EXIT.value.copy()
             else:  # player.color == Color.YELLOW
-                player.pawns[player.id + '1'] = Location.YELLOW_START_EXIT.value.copy()
+                player.pawns[player.id + "1"] = Location.YELLOW_START_EXIT.value.copy()
     do_show_card_descriptions = get_user_confirmation(f"Show card descriptions during play (recommended for beginners)?")
     print()
 
@@ -904,7 +902,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
             print("   11: Move a friendly pawn forward eleven spaces, or swap the location of a friendly pawn and another player's pawn. (Does not work for pawns in their start, home, or safety zone.)")
             print("   12: Move a friendly pawn forward twelve spaces.")
             print("Sorry: Move a friendly pawn from start to a space occupied by another player's pawn, bumping that pawn back to its owner's start. (Does not work on pawns in their home or safety zone.)")
-        all_pawns: Dict[str, Dict[Coordinate, int] | Literal['h', 's']] = {}
+        all_pawns: Dict[str, Dict[Coordinate, int] | Literal["h", "s"]] = {}
         for player in players:
             all_pawns.update(player.pawns)
         print_current_game_board(all_pawns)
@@ -953,7 +951,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                         for possible_play in possible_plays:
                             if possible_play.card_to_play == card_to_play:
                                 selected_card_has_any_valid_play = True
-                                if card_to_play == '2':
+                                if card_to_play == "2":
                                     if possible_play.pawn_targets:
                                         is_no_valid_movement_for_2 = False
                                     else:
@@ -963,7 +961,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                         if not selected_card_has_any_valid_play:
                             print(f"Sorry, but you cannot play your {card_to_play} right now because no valid plays with it exist, though some valid play(s) exist for some other card(s) in your hand.")  # TODO: list the card(s) in hand having valid play(s)
                             card_to_play = None
-                        elif card_to_play == '2' and is_no_valid_movement_for_2:
+                        elif card_to_play == "2" and is_no_valid_movement_for_2:
                             if get_user_confirmation("No pawn can be moved with this 2. Play this 2 only to draw a card?"):
                                 do_no_movement_for_2 = True
                             else:
@@ -974,13 +972,13 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                 pawn_targets = []
                 if not do_no_movement_for_2:
                     pawn_target: None | str = None
-                    while 'c' not in pawn_targets and (not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one) or (num_times_eleven_prompted_validly == 1 and pawn_target)):  # have the user pick as many pawn targets as it takes to complete a valid move
+                    while "c" not in pawn_targets and (not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one) or (num_times_eleven_prompted_validly == 1 and pawn_target)):  # have the user pick as many pawn targets as it takes to complete a valid move
                         pawn_target = None
-                        if pawn_targets and card_to_play not in ['7', '10', '11', 'Sorry'] and not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one):  # if an invalid pawn_target was already provided for a card that requires exactly one pawn target and has no mistaking for what the move is intended to be (otherwise no possible moves with the last chosen pawn target has the last chosen pawn target removed separately), throw out the old/invalid pawn target
+                        if pawn_targets and card_to_play not in ["7", "10", "11", "Sorry"] and not is_valid_target(pawn_targets, card_to_play, player_to_play.name, all_pawns, are_teams, can_sevens_be_split_across_more_than_two_pawns, is_card_a_ten_as_backward_one):  # if an invalid pawn_target was already provided for a card that requires exactly one pawn target and has no mistaking for what the move is intended to be (otherwise no possible moves with the last chosen pawn target has the last chosen pawn target removed separately), throw out the old/invalid pawn target
                             pawn_targets.pop()
                         is_any_possible_play = enumerate_possible_plays(player_to_play.cards_in_hand, player_to_play.name, all_pawns, are_teams, True, can_sevens_be_split_across_more_than_two_pawns, is_immediate_draw_after_playing_a_2, is_card_after_playing_a_2_force_played)
                         default_choice, default_choice_string = determine_default_action(card_to_play, pawn_targets, possible_plays, all_pawns, player_to_play.name, are_teams)
-                        while pawn_target is None or (pawn_target not in all_pawns and pawn_target != 'c' and (pawn_target != 'd' or pawn_targets or is_any_possible_play) and (default_choice is None or pawn_target)):
+                        while pawn_target is None or (pawn_target not in all_pawns and pawn_target != "c" and (pawn_target != "d" or pawn_targets or is_any_possible_play) and (default_choice is None or pawn_target)):
                             pawn_target = input(f"Label of {'the (first)' if not pawn_targets else 'another'} pawn to target with card (such as {player_to_play.name[0]}1){',' if (num_played_2s == 0 or not is_card_after_playing_a_2_force_played) + (not pawn_targets and not is_any_possible_play) + (default_choice is not None) > 1 else (' or' if (num_played_2s == 0 or not is_card_after_playing_a_2_force_played) + (not pawn_targets and not is_any_possible_play) + (default_choice is not None) == 1 else '')}{' cancel/redo card choice (c)' if num_played_2s == 0 or not is_card_after_playing_a_2_force_played else ''}{',' if (num_played_2s == 0 or not is_card_after_playing_a_2_force_played) and ((not pawn_targets and not is_any_possible_play) or default_choice is not None) else ''}{' or' if (pawn_targets or is_any_possible_play) and default_choice is not None else ''}{' discard card (d)' if (not pawn_targets and not is_any_possible_play) else ''}{',' if (not pawn_targets and not is_any_possible_play) and default_choice is not None else ''}{' or' if default_choice is not None else ''}{f' go with the default choice of {default_choice_string} (input nothing)' if default_choice is not None else ''}: ")
                         if not pawn_target:
                             if not isinstance(pawn_targets, dict):
@@ -990,20 +988,20 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                                 pawn_targets.append(pawn_target)
                             else:
                                 pawn_targets[pawn_target] = 0  # arbitrarily initialize to zero
-                        if (not isinstance(pawn_targets, dict) and pawn_targets[-1] not in ['c', 'd']) or (isinstance(pawn_targets, dict) and list(pawn_targets.keys())[-1] not in ['c', 'd']):
-                            if card_to_play == '7':
+                        if (not isinstance(pawn_targets, dict) and pawn_targets[-1] not in ["c", "d"]) or (isinstance(pawn_targets, dict) and list(pawn_targets.keys())[-1] not in ["c", "d"]):
+                            if card_to_play == "7":
                                 if pawn_target:  # for '7's, only request distance input if default choice was not utilized
                                     distance_to_move_pawn = 0
-                                    while (isinstance(distance_to_move_pawn, str) and distance_to_move_pawn != 'c') or distance_to_move_pawn <= 0 or distance_to_move_pawn > seven_remaining_distance:
+                                    while (isinstance(distance_to_move_pawn, str) and distance_to_move_pawn != "c") or distance_to_move_pawn <= 0 or distance_to_move_pawn > seven_remaining_distance:
                                         distance_to_move_pawn = input(f"How many spaces to move {list(pawn_targets.keys())[-1] if isinstance(pawn_targets, dict) else pawn_targets[-1]} (1-{seven_remaining_distance}) or cancel/redo card choice (c): ")
-                                        if distance_to_move_pawn != 'c':
+                                        if distance_to_move_pawn != "c":
                                             try:
                                                 distance_to_move_pawn = int(distance_to_move_pawn)
                                             except ValueError:
                                                 continue  # do nothing but ask for input again
-                                    if distance_to_move_pawn == 'c':
+                                    if distance_to_move_pawn == "c":
                                         pawn_targets.pop(list(pawn_targets.keys())[-1])
-                                        pawn_targets[-1] = 'c'
+                                        pawn_targets[-1] = "c"
                                     else:
                                         if not isinstance(pawn_targets, dict):
                                             pawn_targets = {pawn_target: distance_to_move_pawn}  # update pawn_targets to be a dictionary specifying how much this/each pawn is desired to be moved
@@ -1016,31 +1014,31 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                                         pawn_targets = default_choice  # update pawn_targets to be a dictionary specifying how much this/each pawn is desired to be moved
                                     else:
                                         pawn_targets.update(default_choice)
-                            elif card_to_play == '10':
+                            elif card_to_play == "10":
                                 if is_any_valid_move_for_ten(pawn_targets, player_to_play.name, all_pawns, are_teams):  # if at least one of the ways to play the ten are valid, ask the user for which method they intended (then again check if what they chose is valid)
-                                    is_card_a_ten_as_backward_one = ('b' if "backward" in default_choice_string else ('f' if "forward" in default_choice_string else None))
-                                    while is_card_a_ten_as_backward_one not in ['c', 'b', 'f']:
+                                    is_card_a_ten_as_backward_one = "b" if "backward" in default_choice_string else ("f" if "forward" in default_choice_string else None)
+                                    while is_card_a_ten_as_backward_one not in ["c", "b", "f"]:
                                         is_card_a_ten_as_backward_one = input(f"Do you want to use this card to move {pawn_targets[-1]} forward (f) by ten spaces, backward (b) by one space, or cancel/redo card choice (c)? ")
-                                    if is_card_a_ten_as_backward_one == 'c':
-                                        pawn_targets[-1] = 'c'
+                                    if is_card_a_ten_as_backward_one == "c":
+                                        pawn_targets[-1] = "c"
                                         is_card_a_ten_as_backward_one = False  # reset
                                     else:
-                                        is_card_a_ten_as_backward_one = (is_card_a_ten_as_backward_one == 'b')
+                                        is_card_a_ten_as_backward_one = is_card_a_ten_as_backward_one == "b"
                                 else:
                                     pawn_targets.pop()  # remove invalid pawn selection
-                            elif card_to_play == '11':
+                            elif card_to_play == "11":
                                 is_any_valid_swap = is_any_valid_swap_for_eleven(pawn_targets[0], player_to_play.name, all_pawns, are_teams)
                                 num_times_eleven_prompted_validly += is_any_valid_swap  # ignore counting this prompt for the eleven card if the response was unacceptable
                                 if not is_any_valid_swap:
                                     pawn_targets.pop()  # remove invalid pawn selection
-                            elif card_to_play == 'Sorry':
+                            elif card_to_play == "Sorry":
                                 if not is_any_valid_play_for_sorry(pawn_targets[0], player_to_play.name, all_pawns, are_teams):
                                     pawn_targets.pop()  # remove invalid pawn selection
-                    if 'd' in pawn_targets:
+                    if "d" in pawn_targets:
                         continue
-                if 'c' in pawn_targets:
+                if "c" in pawn_targets:
                     is_valid_play = False
-                elif card_to_play == '2':  # play the 2 then continue the player's turn by having them choose an additional card to play
+                elif card_to_play == "2":  # play the 2 then continue the player's turn by having them choose an additional card to play
                     num_played_2s += 1
                     if not do_no_movement_for_2:
                         play_card(card_to_play, pawn_targets, all_pawns)
@@ -1080,7 +1078,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                         index += 1
                     card_to_play = possible_plays[index_of_play_with_max_score].card_to_play
                     pawn_targets = possible_plays[index_of_play_with_max_score].pawn_targets
-                    if card_to_play == '2':
+                    if card_to_play == "2":
                         num_played_2s += 1
                         is_turn_done = False
                         if pawn_targets:
@@ -1101,7 +1099,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                     else:  # the last card to play gets handled by the logic following the loop
                         is_card_a_ten_as_backward_one = possible_plays[index_of_play_with_max_score].is_card_a_ten_as_backward_one
 
-        if 'd' not in pawn_targets:
+        if "d" not in pawn_targets:
             play_card(card_to_play, pawn_targets, all_pawns, is_card_a_ten_as_backward_one)
             for pawn in all_pawns:  # update all players' copies of the pawns
                 for player in players:
