@@ -11,7 +11,7 @@ Start date: 2021-07-08
 
 ## Dependencies
 
-- [Python version 3.8.1](https://www.python.org/downloads/)
+- [Python version 3.13.5](https://www.python.org/downloads/)
 
 ## Usage
 
