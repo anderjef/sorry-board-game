@@ -1,6 +1,6 @@
-# Sorry! Boardgame
+# Sorry! Board Game
 
-Sorry! Boardgame is a computer-terminal version of the Sorry! boardgame.  
+Sorry! Board Game is a computer-terminal version of the Sorry! board game.  
 Start date: 2021-07-08  
 
 ## Demo
@@ -15,7 +15,7 @@ Start date: 2021-07-08
 
 ## Usage
 
-`py sorry_boardgame.py`
+`py sorry_board_game.py`
 
 Follow the prompts for setup and then play.  
 Players are kept from seeing each other's hands by console clears between player turns and requiring console input before showing the next player's hand.  

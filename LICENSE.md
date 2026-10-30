@@ -1,4 +1,4 @@
-# Sorry! Boardgame License
+# Sorry! Board Game License
 
 ## Warranty
 
