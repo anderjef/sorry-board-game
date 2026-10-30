@@ -968,7 +968,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                                 else:
                                     break
                         if not selected_card_has_any_valid_play:
-                            print(f"Sorry, but you cannot play your {card_to_play} right now because no valid plays with it exist, though some valid play(s) exist for some other card(s) in your hand.")  # TODO: list the card(s) in hand having valid play(s)
+                            print(f"There are no valid plays for your {card_to_play} right now, but there are some for other cards in your hand.")  # TODO: list the cards in hand having valid plays
                             card_to_play = None
                         elif card_to_play == "2" and is_no_valid_movement_for_2:
                             if get_user_confirmation("No pawn can be moved with this 2. Play this 2 only to draw a card?"):
