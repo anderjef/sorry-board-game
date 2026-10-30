@@ -1137,8 +1137,9 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                 is_game_won = False
                 break
         if are_teams and is_game_won:
-            for pawn in players[(players_turn + 2) % num_players].pawns:
-                if players[(players_turn + 2) % num_players].pawns[pawn] != SpecialLocation.HOME.value:
+            teammate = players[(players_turn + 2) % num_players]
+            for pawn in teammate.pawns:
+                if teammate.pawns[pawn] != SpecialLocation.HOME.value:
                     is_game_won = False
                     break
         players_turn += 1
