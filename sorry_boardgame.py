@@ -1086,8 +1086,9 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                             max_score = possible_play.play_score
                             index_of_play_with_max_score = index
                         index += 1
-                    card_to_play = possible_plays[index_of_play_with_max_score].card_to_play
-                    pawn_targets = possible_plays[index_of_play_with_max_score].pawn_targets
+                    best_play = possible_plays[index_of_play_with_max_score]
+                    card_to_play = best_play.card_to_play
+                    pawn_targets = best_play.pawn_targets
                     if card_to_play == "2":
                         num_played_2s += 1
                         is_turn_done = False
