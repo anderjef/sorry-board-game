@@ -216,12 +216,15 @@ def print_board_line(line: str, line_num: int, all_pawns: dict[str, dict[Coordin
         line = board_line_with_slides_colored
     else:
         if line_num not in [Coordinate.MIN_Y.value * 2, (Coordinate.MIN_Y.value + 1) * 2, Coordinate.MAX_Y.value * 2, (Coordinate.MAX_Y.value + 1) * 2]:
+            half_line_len = int(len(line) / 2)
+            line_len_odd = len(line) % 2 == 1
+            line_middle_character = line[half_line_len] if line_len_odd else ""
             if line_y_pos < int(Coordinate.MAX_Y.value / 2) + 1:
-                line = line[:6] + Color.GREEN.value + line[6 : int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else "") + Color.RED.value + line[int(len(line) / 2) + (len(line) % 2 == 1) : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
+                line = line[:6] + Color.GREEN.value + line[6:half_line_len] + Color.RESET.value + line_middle_character + Color.RED.value + line[half_line_len + line_len_odd : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
             elif line_y_pos > int(Coordinate.MAX_Y.value / 2) + 1:
-                line = line[:6] + Color.YELLOW.value + line[6 : int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else "") + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1) : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
+                line = line[:6] + Color.YELLOW.value + line[6:half_line_len] + Color.RESET.value + line_middle_character + Color.BLUE.value + line[half_line_len + line_len_odd : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
             else:  # line_y_pos == int(Coordinate.MAX_Y.value / 2) + 1
-                line = line[:6] + Color.GREEN.value + line[6 : int(len(line) / 2)] + Color.RESET.value + (line[int(len(line) / 2)] if len(line) % 2 == 1 else "") + Color.BLUE.value + line[int(len(line) / 2) + (len(line) % 2 == 1) : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
+                line = line[:6] + Color.GREEN.value + line[6:half_line_len] + Color.RESET.value + line_middle_character + Color.BLUE.value + line[half_line_len + line_len_odd : len(line) - 6] + Color.RESET.value + line[len(line) - 6 :]
         if line[0] == "|":
             board_line_with_slides_colored = line[0]
             character_being_colored: str | None = None
@@ -440,7 +443,11 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: dict[str, 
             coordinate_to_update = list(slide_object[1].keys())[0]
             saved_pawn_location = all_pawns[label_of_pawn_to_move].copy()  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
             saved_pawn_location[coordinate_to_update] += slide_locations[this_slide_location_index][1][coordinate_to_update]  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
-            bump_pawns_at_coordinates(all_pawns, list(({Coordinate.X: x_value, Coordinate.Y: saved_pawn_location[Coordinate.Y]} for x_value in range(min(saved_pawn_location[Coordinate.X], all_pawns[label_of_pawn_to_move][Coordinate.X]), max(saved_pawn_location[Coordinate.X], all_pawns[label_of_pawn_to_move][Coordinate.X]) + 1)) if saved_pawn_location[Coordinate.Y] in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value] else ({Coordinate.X: saved_pawn_location[Coordinate.X], Coordinate.Y: y_value} for y_value in range(min(saved_pawn_location[Coordinate.Y], all_pawns[label_of_pawn_to_move][Coordinate.Y]), max(saved_pawn_location[Coordinate.Y], all_pawns[label_of_pawn_to_move][Coordinate.Y]) + 1))))
+            saved_pawn_x = saved_pawn_location[Coordinate.X]
+            saved_pawn_y = saved_pawn_location[Coordinate.Y]
+            pawn_to_move_x = all_pawns[label_of_pawn_to_move][Coordinate.X]
+            pawn_to_move_y = all_pawns[label_of_pawn_to_move][Coordinate.Y]
+            bump_pawns_at_coordinates(all_pawns, list(({Coordinate.X: x_value, Coordinate.Y: saved_pawn_y} for x_value in range(min(saved_pawn_x, pawn_to_move_x), max(saved_pawn_x, pawn_to_move_x) + 1)) if saved_pawn_y in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value] else ({Coordinate.X: saved_pawn_x, Coordinate.Y: y_value} for y_value in range(min(saved_pawn_y, pawn_to_move_y), max(saved_pawn_y, pawn_to_move_y) + 1))))
             all_pawns[label_of_pawn_to_move] = saved_pawn_location
             if name_of_player_making_move is not None:
                 return True
