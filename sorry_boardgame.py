@@ -133,7 +133,7 @@ def clear_console():
 
 def print_board_line(line: str, line_num: int, all_pawns: dict[str, dict[Coordinate, int] | Literal["h", "s"]], is_which_pawns_placed: list[bool]):  # takes a board line, the line number, list of all the pawns (which could be on the line) to be adjusted as pawns are placed, and list of whether each of those pawns has been placed, prints the corresponding formatted board line with any pawns on it labeled accordingly, yields the list of whether each of the pawns has been placed with the correct adjustments (for pawns that were placed), and returns the next line number
     line_y_pos = int(line_num / 2)
-    if line[0] == "|":  # looking at the sample board provided, one notices that whenever line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with "|"
+    if line[0] == "|":  # whenever a line contains a regular (non-SpecialLocation) spot for pawns to possibly belong, the line starts with "|"
         pawn_index = 0
         for pawn_label in all_pawns:
             if isinstance(all_pawns[pawn_label], dict) and all_pawns[pawn_label][Coordinate.Y] == line_y_pos:
@@ -143,18 +143,18 @@ def print_board_line(line: str, line_num: int, all_pawns: dict[str, dict[Coordin
     if any(element in line for element in ["/      \\", r"\      /", "|        |"]):  # line contains a location a pawn in a SpecialLocation.START.value or SpecialLocation.HOME.value location may belong in
         start_of_substring_search_index = 0
         while line.find("/      \\", start_of_substring_search_index) != -1 or line.find(r"\      /", start_of_substring_search_index) != -1:
-            start_of_substring_search_index = max(line.find("/      \\", start_of_substring_search_index), line.find(r"\      /", start_of_substring_search_index))  # looking at the sample board provided, one notices that "/      \\" and r"\      /" never both occur on the same line (therefore one of the find() will return -1 and the other whatever was found)
+            start_of_substring_search_index = max(line.find("/      \\", start_of_substring_search_index), line.find(r"\      /", start_of_substring_search_index))  # "/      \\" and r"\      /" never both occur on the same line (therefore one of the find() will return -1 and the other whatever was found)
             length_of_found_string = len("/      \\")  # also equals len(r"\      /")
             player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
             special_location: SpecialLocation | None = None  # whether this special location is a start or home area
-            if line[0] == "+":  # looking at the sample board provided, one notices that the presence of "+" or "-" on a line with r"\      /" or "/      \\" indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to "+"
+            if line[0] == "+":  # "+" or "-" on a line with r"\      /" or "/      \\" indicates the presence of a SpecialLocation for the red or yellow player, and further that only the first character of the line need be compared to "+"
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
                     special_location = SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.RED.name[0]
                     special_location = SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.START  # if this special location is in the third quartile (going left to right) of the board, then it is the red player's SpecialLocation.HOME.value, else it is in the fourth quartile (going left to right) of the board and hence is the red player's SpecialLocation.START.value
-            else:  # looking at the sample board provided, one notices that the lack of "+" or "-"" on a line with r"\      /" or "/      \\" indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to "+"
+            else:  # the lack of "+" or "-"" on a line with r"\      /" or "/      \\" indicates the presence of a SpecialLocation for the green or blue player, and further that only the first character of the line need be compared to "+"
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
                     special_location = SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
@@ -177,14 +177,14 @@ def print_board_line(line: str, line_num: int, all_pawns: dict[str, dict[Coordin
             is_a_slot_occupied = False
             player_letter: str | None = None  # the first letter of the name of the player this special location belongs to
             special_location: SpecialLocation | None = None  # whether this special location is a start or home area
-            if line[0] == "+":  # looking at the sample board provided, one notices that the presence of "+" or "-" on a line with "|        |" indicates the presence of a SpecialLocation for the green or blue player, and furthermore that only the first character of the line need be compared to "+"
+            if line[0] == "+":  # "+" or "-" on a line with "|        |" indicates the presence of a SpecialLocation for the green or blue player, and further that only the first character of the line need be compared to "+"
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.GREEN.name[0]
                     special_location = SpecialLocation.HOME if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.START  # if this special location is in the first quartile (going left to right) of the board, then it is the green player's SpecialLocation.HOME.value, else it is in the second quartile (going left to right) of the board and hence is the green player's SpecialLocation.START.value
                 else:  # this special location is on the right side of the board (indicating being for either the red or blue player)
                     player_letter = Color.BLUE.name[0]
                     special_location = SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - 3 * len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - 3 * len(line) / 4) else start_of_substring_search_index + length_of_found_string) < 3 * len(line) / 4) else SpecialLocation.HOME  # if this special location is in the third quartile (going left to right) of the board, then it is the blue player's SpecialLocation.START.value, else it is in the fourth quartile (going left to right) of the board and hence is the blue player's SpecialLocation.HOME.value
-            else:  # looking at the sample board provided, one notices that the lack of "+" or "-" on a line with "|        |" indicates the presence of a SpecialLocation for the red or yellow player, and furthermore that only the first character of the line need be compared to "+"
+            else:  # the lack of "+" or "-" on a line with "|        |" indicates the presence of a SpecialLocation for the red or yellow player, and further that only the first character of the line need be compared to "+"
                 if (start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 2) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 2) else start_of_substring_search_index + length_of_found_string) < len(line) / 2:  # this special location is on the left half of the board (indicating being for either the green or yellow player)
                     player_letter = Color.YELLOW.name[0]
                     special_location = SpecialLocation.START if ((start_of_substring_search_index if abs(start_of_substring_search_index - len(line) / 4) > abs(start_of_substring_search_index + length_of_found_string - len(line) / 4) else start_of_substring_search_index + length_of_found_string) < len(line) / 4) else SpecialLocation.HOME  # if this special location is in the first quartile (going left to right) of the board, then it is the yellow player's SpecialLocation.START.value, else it is in the second quartile (going left to right) of the board and hence is the yellow player's SpecialLocation.HOME.value
@@ -328,7 +328,7 @@ def draw_card(draw_pile: list[str], discard_pile: list[str], last_discard_pile: 
         discard_pile.clear()
         random.shuffle(draw_pile)
         print("Shuffled discard pile back into the draw pile.")
-    return draw_pile.pop(), (num_times_to_show_last_discard_pile if discard_pile else num_players - 1)  # num_players - 1 show as not to show the last discard pile to the player that played the last card into it
+    return draw_pile.pop(), (num_times_to_show_last_discard_pile if discard_pile else num_players - 1)  # num_players - 1 so as not to show the last discard pile to the player that played the last card into it
 
 
 def get_teammate_letter(player_name: str):  # returns an empty string on error
@@ -927,7 +927,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
 
         is_valid_play = False
         card_to_play: str | None = None
-        if hand_size == 0:  # immediately draw the card if there are no hands of cards
+        if hand_size == 0:  # immediately draw if there are no hands of cards
             drawn_card, num_times_to_show_last_discard_pile = draw_card(draw_pile, discard_pile, last_discard_pile, num_times_to_show_last_discard_pile, num_players)
             player_to_play.cards_in_hand.append(drawn_card)
             card_to_play = player_to_play.cards_in_hand[0]
