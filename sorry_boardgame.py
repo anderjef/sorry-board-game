@@ -384,11 +384,12 @@ def binary_search(value_to_find: Any, array_to_search: NestedList, access_array:
 def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: dict[str, dict[Coordinate, int] | Literal["h", "s"]], name_of_player_making_move: str | None = None):  # takes the number of spaces to move the pawn of label label_of_pawn_to_move and an adjusted dictionary of all the pawns (having moved bumped pawns back to their SpecialLocation.START.value); returns (if name_of_player_making_move is provided) whether the movement was valid
     is_movement_forward = num_spaces > 0
     while num_spaces != 0:
-        if all_pawns[label_of_pawn_to_move] == SpecialLocation.HOME.value:
+        location_of_pawn_to_move = all_pawns[label_of_pawn_to_move]
+        if location_of_pawn_to_move == SpecialLocation.HOME.value:
             if name_of_player_making_move is not None:
                 return False
             return
-        elif all_pawns[label_of_pawn_to_move] == SpecialLocation.START.value:  # note that movements from the SpecialLocation.START.value are accepted, but anticipate the movement to be nonnegative
+        elif location_of_pawn_to_move == SpecialLocation.START.value:  # note that movements from the SpecialLocation.START.value are accepted, but anticipate the movement to be nonnegative
             if label_of_pawn_to_move[0] == Color.BLUE.name[0]:
                 all_pawns[label_of_pawn_to_move] = Location.BLUE_START_EXIT.value.copy()
             elif label_of_pawn_to_move[0] == Color.GREEN.name[0]:
@@ -398,7 +399,7 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: dict[str, 
             elif label_of_pawn_to_move[0] == Color.YELLOW.name[0]:  # check is redundant
                 all_pawns[label_of_pawn_to_move] = Location.YELLOW_START_EXIT.value.copy()
             break  # no further movement is allowed if the pawn is moved from its start location
-        elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if in a safe zone
+        elif location_of_pawn_to_move[Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and location_of_pawn_to_move[Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if in a safe zone
             if label_of_pawn_to_move[0] == Color.BLUE.name[0]:
                 all_pawns[label_of_pawn_to_move][Coordinate.Y] += -1 if is_movement_forward else 1
             elif label_of_pawn_to_move[0] == Color.GREEN.name[0]:
@@ -409,52 +410,53 @@ def move_pawn(num_spaces: int, label_of_pawn_to_move: str, all_pawns: dict[str, 
                 all_pawns[label_of_pawn_to_move][Coordinate.X] += 1 if is_movement_forward else -1
             if all_pawns[label_of_pawn_to_move] in Location.HOME_COORDINATES.value:  # if at a SpecialLocation.HOME.value location
                 all_pawns[label_of_pawn_to_move] = SpecialLocation.HOME.value
-        elif all_pawns[label_of_pawn_to_move] == Location.BLUE_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.BLUE.name[0]:
+        elif location_of_pawn_to_move == Location.BLUE_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.BLUE.name[0]:
             all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += -1 if is_movement_forward else 1
-        elif all_pawns[label_of_pawn_to_move] == Location.GREEN_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.GREEN.name[0]:
+        elif location_of_pawn_to_move == Location.GREEN_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.GREEN.name[0]:
             all_pawns[label_of_pawn_to_move][Coordinate.Y if is_movement_forward else Coordinate.X] += 1 if is_movement_forward else -1
-        elif all_pawns[label_of_pawn_to_move] == Location.RED_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.RED.name[0]:
+        elif location_of_pawn_to_move == Location.RED_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.RED.name[0]:
             all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += -1 if is_movement_forward else 1
-        elif all_pawns[label_of_pawn_to_move] == Location.YELLOW_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
+        elif location_of_pawn_to_move == Location.YELLOW_SAFETY_ZONE_ENTRANCE.value and label_of_pawn_to_move[0] == Color.YELLOW.name[0]:
             all_pawns[label_of_pawn_to_move][Coordinate.X if is_movement_forward else Coordinate.Y] += 1 if is_movement_forward else -1
-        elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] == Coordinate.MIN_Y.value:  # if pawn is on top edge of board
+        elif location_of_pawn_to_move[Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and location_of_pawn_to_move[Coordinate.Y] == Coordinate.MIN_Y.value:  # if pawn is on top edge of board
             all_pawns[label_of_pawn_to_move][Coordinate.X] += 1 if is_movement_forward else -1
-        elif all_pawns[label_of_pawn_to_move][Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and all_pawns[label_of_pawn_to_move][Coordinate.Y] == Coordinate.MAX_Y.value:  # if pawn is on bottom edge of board
+        elif location_of_pawn_to_move[Coordinate.X] not in [Coordinate.MIN_X.value, Coordinate.MAX_X.value] and location_of_pawn_to_move[Coordinate.Y] == Coordinate.MAX_Y.value:  # if pawn is on bottom edge of board
             all_pawns[label_of_pawn_to_move][Coordinate.X] -= 1 if is_movement_forward else -1
-        elif all_pawns[label_of_pawn_to_move][Coordinate.X] == Coordinate.MIN_X.value and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if pawn is on left edge of board
+        elif location_of_pawn_to_move[Coordinate.X] == Coordinate.MIN_X.value and location_of_pawn_to_move[Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if pawn is on left edge of board
             all_pawns[label_of_pawn_to_move][Coordinate.Y] -= 1 if is_movement_forward else -1
-        elif all_pawns[label_of_pawn_to_move][Coordinate.X] == Coordinate.MAX_X.value and all_pawns[label_of_pawn_to_move][Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if pawn is on right edge of board
+        elif location_of_pawn_to_move[Coordinate.X] == Coordinate.MAX_X.value and location_of_pawn_to_move[Coordinate.Y] not in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value]:  # if pawn is on right edge of board
             all_pawns[label_of_pawn_to_move][Coordinate.Y] += 1 if is_movement_forward else -1
-        elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 0, Coordinate.Y: 0}:  # if pawn is in the top left square
+        elif location_of_pawn_to_move == {Coordinate.X: 0, Coordinate.Y: 0}:  # if pawn is in the top left square
             all_pawns[label_of_pawn_to_move][(Coordinate.X if is_movement_forward else Coordinate.Y)] += 1
-        elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 15, Coordinate.Y: 0}:  # if pawn is in the top right square
+        elif location_of_pawn_to_move == {Coordinate.X: 15, Coordinate.Y: 0}:  # if pawn is in the top right square
             all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += 1 if is_movement_forward else -1
-        elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 0, Coordinate.Y: 15}:  # if pawn is in the bottom left square
+        elif location_of_pawn_to_move == {Coordinate.X: 0, Coordinate.Y: 15}:  # if pawn is in the bottom left square
             all_pawns[label_of_pawn_to_move][(Coordinate.Y if is_movement_forward else Coordinate.X)] += -1 if is_movement_forward else 1
-        elif all_pawns[label_of_pawn_to_move] == {Coordinate.X: 15, Coordinate.Y: 15}:  # if pawn is in the bottom right square; check is redundant
+        elif location_of_pawn_to_move == {Coordinate.X: 15, Coordinate.Y: 15}:  # if pawn is in the bottom right square; check is redundant
             all_pawns[label_of_pawn_to_move][(Coordinate.X if is_movement_forward else Coordinate.Y)] -= 1
         num_spaces += -1 if is_movement_forward else 1
-    if all_pawns[label_of_pawn_to_move] not in [SpecialLocation.START.value, SpecialLocation.HOME.value] and ((label_of_pawn_to_move[0] == Color.BLUE.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.Y] != Coordinate.MAX_Y.value) or (label_of_pawn_to_move[0] == Color.GREEN.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.Y] != Coordinate.MIN_Y.value) or (label_of_pawn_to_move[0] == Color.RED.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.X] != Coordinate.MAX_X.value) or (label_of_pawn_to_move[0] == Color.YELLOW.name[0] and all_pawns[label_of_pawn_to_move][Coordinate.X] != Coordinate.MIN_X.value)):  # if not on line corresponding to pawn's color
-        if all_pawns[label_of_pawn_to_move] in Location.SLIDE_ENTRANCES.value:  # if at the start of a slide
-            this_slide_location = all_pawns[label_of_pawn_to_move][Coordinate.X] + all_pawns[label_of_pawn_to_move][Coordinate.Y]  # summing the x and y coordinates gives a unique sum for each slide, and hence is used to determine which slide is being ridden
+    location_of_pawn_to_move = all_pawns[label_of_pawn_to_move]
+    if location_of_pawn_to_move not in [SpecialLocation.START.value, SpecialLocation.HOME.value] and ((label_of_pawn_to_move[0] == Color.BLUE.name[0] and location_of_pawn_to_move[Coordinate.Y] != Coordinate.MAX_Y.value) or (label_of_pawn_to_move[0] == Color.GREEN.name[0] and location_of_pawn_to_move[Coordinate.Y] != Coordinate.MIN_Y.value) or (label_of_pawn_to_move[0] == Color.RED.name[0] and location_of_pawn_to_move[Coordinate.X] != Coordinate.MAX_X.value) or (label_of_pawn_to_move[0] == Color.YELLOW.name[0] and location_of_pawn_to_move[Coordinate.X] != Coordinate.MIN_X.value)):  # if not on line corresponding to pawn's color
+        if location_of_pawn_to_move in Location.SLIDE_ENTRANCES.value:  # if at the start of a slide
+            this_slide_location = location_of_pawn_to_move[Coordinate.X] + location_of_pawn_to_move[Coordinate.Y]  # summing the x and y coordinates gives a unique sum for each slide, and hence is used to determine which slide is being ridden
             slide_locations = [[1, {Coordinate.X: 3}], [6, {Coordinate.Y: -4}], [9, {Coordinate.X: 4}], [14, {Coordinate.Y: -3}], [16, {Coordinate.Y: 3}], [21, {Coordinate.X: -4}], [24, {Coordinate.Y: 4}], [29, {Coordinate.X: -3}]]  # each index of slide_locations is the sum of the x and y coordinates of the start of the slide, followed by a dictionary of which coordinate of the pawn to update and by (adding) what amount
             this_slide_location_index = binary_search(this_slide_location, slide_locations, [0])
             slide_object = slide_locations[this_slide_location_index]
             coordinate_to_update = list(slide_object[1].keys())[0]
-            saved_pawn_location = all_pawns[label_of_pawn_to_move].copy()  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
+            saved_pawn_location = location_of_pawn_to_move.copy()  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
             saved_pawn_location[coordinate_to_update] += slide_locations[this_slide_location_index][1][coordinate_to_update]  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
             saved_pawn_x = saved_pawn_location[Coordinate.X]
             saved_pawn_y = saved_pawn_location[Coordinate.Y]
-            pawn_to_move_x = all_pawns[label_of_pawn_to_move][Coordinate.X]
-            pawn_to_move_y = all_pawns[label_of_pawn_to_move][Coordinate.Y]
+            pawn_to_move_x = location_of_pawn_to_move[Coordinate.X]
+            pawn_to_move_y = location_of_pawn_to_move[Coordinate.Y]
             bump_pawns_at_coordinates(all_pawns, list(({Coordinate.X: x_value, Coordinate.Y: saved_pawn_y} for x_value in range(min(saved_pawn_x, pawn_to_move_x), max(saved_pawn_x, pawn_to_move_x) + 1)) if saved_pawn_y in [Coordinate.MIN_Y.value, Coordinate.MAX_Y.value] else ({Coordinate.X: saved_pawn_x, Coordinate.Y: y_value} for y_value in range(min(saved_pawn_y, pawn_to_move_y), max(saved_pawn_y, pawn_to_move_y) + 1))))
             all_pawns[label_of_pawn_to_move] = saved_pawn_location
             if name_of_player_making_move is not None:
                 return True
             return
     is_bump_valid = True
-    if all_pawns[label_of_pawn_to_move] != SpecialLocation.HOME.value:
-        saved_pawn_location = all_pawns[label_of_pawn_to_move]  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
+    if location_of_pawn_to_move != SpecialLocation.HOME.value:
+        saved_pawn_location = location_of_pawn_to_move  # save the location of where the moved pawn belongs as bump_pawns_at_coordinates() will indiscriminately send it back to SpecialLocation.START.value
         pawns_that_must_not_be_landed_on: dict[str, dict[Coordinate, int] | Literal["h", "s"]] = {}  # pawns are forbidden from landing on pawns belonging to the player making the play
         if name_of_player_making_move is not None:
             for pawn_label in all_pawns:
