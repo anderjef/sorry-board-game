@@ -1126,7 +1126,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                     drawn_card, num_times_to_show_last_discard_pile = draw_card(draw_pile, discard_pile, last_discard_pile, num_times_to_show_last_discard_pile, num_players)
                     player_to_play.cards_in_hand.append(drawn_card)
             if player_to_play.player_type == PlayerType.HUMAN:
-                print_hand_of_cards(player_to_play)  # let the user see their draw before yielding their turn to the next player
+                print_hand_of_cards(player_to_play)  # let the user see their draw before yielding control to the next player
                 input("Press enter to complete your turn.")
         if player_to_play.player_type == PlayerType.HUMAN:
             clear_console()
