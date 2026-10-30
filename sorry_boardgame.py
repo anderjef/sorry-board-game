@@ -989,15 +989,16 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                         default_choice, default_choice_string = determine_default_action(card_to_play, pawn_targets, possible_plays, all_pawns, player_to_play.name, are_teams)
                         while pawn_target is None or (pawn_target not in all_pawns and pawn_target != "c" and (pawn_target != "d" or pawn_targets or is_any_possible_play) and (default_choice is None or pawn_target)):
                             pawn_target = input(f"Label of {"the (first)" if not pawn_targets else "another"} pawn to target with card (such as {player_to_play.name[0]}1){"," if (num_played_2s == 0 or not is_card_after_playing_a_2_force_played) + (not pawn_targets and not is_any_possible_play) + (default_choice is not None) > 1 else (" or" if (num_played_2s == 0 or not is_card_after_playing_a_2_force_played) + (not pawn_targets and not is_any_possible_play) + (default_choice is not None) == 1 else "")}{" cancel/redo card choice (c)" if num_played_2s == 0 or not is_card_after_playing_a_2_force_played else ""}{"," if (num_played_2s == 0 or not is_card_after_playing_a_2_force_played) and ((not pawn_targets and not is_any_possible_play) or default_choice is not None) else ""}{" or" if (pawn_targets or is_any_possible_play) and default_choice is not None else ""}{" discard card (d)" if (not pawn_targets and not is_any_possible_play) else ""}{"," if (not pawn_targets and not is_any_possible_play) and default_choice is not None else ""}{" or" if default_choice is not None else ""}{f" go with the default choice of {default_choice_string} (input nothing)" if default_choice is not None else ""}: ")
+                        pawn_targets_is_dict = isinstance(pawn_targets, dict)
                         if not pawn_target:
-                            if not isinstance(pawn_targets, dict):
+                            if not pawn_targets_is_dict:
                                 pawn_targets += default_choice  # default_choice has already been confirmed to not be None if len(pawn_target) == 0
                         else:
-                            if not isinstance(pawn_targets, dict):
+                            if not pawn_targets_is_dict:
                                 pawn_targets.append(pawn_target)
                             else:
                                 pawn_targets[pawn_target] = 0  # arbitrarily initialize to zero
-                        if (not isinstance(pawn_targets, dict) and pawn_targets[-1] not in ["c", "d"]) or (isinstance(pawn_targets, dict) and list(pawn_targets.keys())[-1] not in ["c", "d"]):
+                        if (not pawn_targets_is_dict and pawn_targets[-1] not in ["c", "d"]) or (pawn_targets_is_dict and list(pawn_targets.keys())[-1] not in ["c", "d"]):
                             if card_to_play == "7":
                                 if pawn_target:  # for "7"s, only request distance input if default choice was not utilized
                                     distance_to_move_pawn = 0
