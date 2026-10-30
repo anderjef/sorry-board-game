@@ -4,7 +4,7 @@
 # TODO: change how the end of slides are labeled as the "0"s can be hard to read through
 # TODO: as a player plays a 7, give them the ability to undo how they have divvied up the movements (as opposed to cancelling the operation and starting from scratch)
 # TODO: better display for getting a number in a range from a user such that if there is only one numerical option, the user understands this and that inputting the sole number shown indicates using that number as the input value
-# TODO: if there is a default play on a turn (and only one possible play), don't allow the player to try to pick a different valid play for the given card
+# TODO: if there is a default play on a turn (and only one possible play), don't let the player to try to pick a different valid play for the given card
 # TODO: some invalid-play message when a user attempts an invalid play
 # TODO: playing until a number of points is achieved (5 points per opponent pawn not home, 25 points if opponents have at most two pawns home, 50 points if opponents have at most one pawn home, and 100 points if no opponent has any pawns home) where the winner goes first in subsequent rounds
 # TODO: use slide locations in Location enum to dynamically determine and mark the slide paths on the game board
@@ -1123,7 +1123,7 @@ def sorry_board_game():  # returns zero on success and some other integer on fai
                     drawn_card, num_times_to_show_last_discard_pile = draw_card(draw_pile, discard_pile, last_discard_pile, num_times_to_show_last_discard_pile, num_players)
                     player_to_play.cards_in_hand.append(drawn_card)
             if player_to_play.player_type == PlayerType.HUMAN:
-                print_hand_of_cards(player_to_play)  # allow the user to see their draw before yielding their turn to the next player
+                print_hand_of_cards(player_to_play)  # let the user see their draw before yielding their turn to the next player
                 input("Press enter to complete your turn.")
         if player_to_play.player_type == PlayerType.HUMAN:
             clear_console()
