@@ -328,7 +328,7 @@ def draw_card(draw_pile: list[str], discard_pile: list[str], last_discard_pile: 
         discard_pile.clear()
         random.shuffle(draw_pile)
         print("Shuffled discard pile back into the draw pile.")
-    return draw_pile.pop(), (num_times_to_show_last_discard_pile if discard_pile else num_players - 1)  # num_players - 1 so as not to show the last discard pile to the player that played the last card into it
+    return draw_pile.pop(), (num_times_to_show_last_discard_pile if discard_pile else num_players - 1)  # num_players - 1 as the player that last played onto the discard pile ostensibly knows what they played
 
 
 def get_teammate_letter(player_name: str):  # returns an empty string on error
